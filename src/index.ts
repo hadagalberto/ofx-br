@@ -4,9 +4,9 @@
  *
  * Public API. Memo enrichment (Pix/TED/DOC categories, counterparties,
  * installments, card sign normalization) runs as part of `parse`/
- * `parseBuffer` and is also exposed piecewise. CSV/NDJSON export and the
- * full CLI surface arrive with their milestones; everything exported here
- * is stable and fully tested.
+ * `parseBuffer` and is also exposed piecewise. `toJson` and `toCsv` back
+ * the CLI's `--format json|csv|ndjson`; everything exported here is stable
+ * and fully tested.
  */
 export { detectEncoding } from './encoding/detect.js';
 export { decodeOfx } from './encoding/decode.js';
@@ -63,6 +63,8 @@ export {
 export type { BrazilianBank } from './banks.js';
 export { formatMoney, formatOfxAmount, moneyToNumber, parseAmountToCents } from './money.js';
 export type { AmountParseResult, Money } from './money.js';
+export { CSV_COLUMNS, UTF8_BOM, toCsv, toJson, validateDelimiter } from './serialize.js';
+export type { CsvLocale, ToCsvOptions, ToJsonOptions } from './serialize.js';
 export { parseOfxDateTime, parseTimeZoneOffset } from './datetime.js';
 export type { OfxDateWarning, OfxDateWarningCode, OfxDateTimeResult } from './datetime.js';
 export { OfxParseError } from './errors.js';

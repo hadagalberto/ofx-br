@@ -1,0 +1,103 @@
+# SPEC audit — milestone 6
+
+Repository-wide audit against [`SPEC.md`](./SPEC.md). Every requirement is listed with its status,
+the implementation that carries it and the test(s) that exercise it. All rows were re-verified after
+the CLI/export milestone: build, lint, format check, typecheck, full test suite and coverage all
+pass locally.
+
+## Stack and packaging
+
+| #   | Requirement                                                                                 | Status | Implementation / evidence                                                                        |
+| --- | ------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
+| 1   | TypeScript 5 strict                                                                         | Done   | `tsconfig.json` (`strict`, `noUncheckedIndexedAccess`, `noUnusedLocals`, …); `npm run typecheck` |
+| 2   | ESM + CJS dual build (tsup)                                                                 | Done   | `tsup.config.ts`; `dist/index.js` + `dist/index.cjs` + declarations; `npm run build`             |
+| 3   | Node ≥ 20                                                                                   | Done   | `package.json` `engines`; CI matrix Node 20/22/24                                                |
+| 4   | Works in browsers; no Node APIs in the core                                                 | Done   | `src/node/**` and `src/cli.ts` only Node I/O; ESLint `no-restricted-imports` on `src/**`         |
+| 5   | Zero runtime dependencies in the core                                                       | Done   | `package.json` has no `dependencies` field                                                       |
+| 6   | Vitest with ≥ 90% line coverage on core                                                     | Done   | `vitest.config.ts` thresholds 90% on lines/functions/statements/branches; measured ≈99% lines    |
+| 7   | ESLint (typescript-eslint strict) + Prettier                                                | Done   | `eslint.config.js` strict/stylistic, `--max-warnings 0`; `npm run format:check`                  |
+| 8   | Package name `ofx-br`                                                                       | Done   | `package.json`                                                                                   |
+| 9   | Exports `parse`, `parseBuffer`, `detectEncoding`, `toCsv`, `toJson`, types                  | Done   | `src/index.ts`; `test/serialize.test.ts`, `test/cli.test.ts` (public API surface)                |
+| 10  | CLI bin `ofx-br`                                                                            | Done   | `package.json` `bin` → `dist/cli.js` (shebang preserved by tsup); `test/cli-spawn.test.ts`       |
+| 11  | GitHub Actions CI: lint, typecheck, coverage test, build on Node 20/22/24, ubuntu + windows | Done   | `.github/workflows/ci.yml` (plus format check)                                                   |
+| 12  | Docs: README.md, README.pt-BR.md, CHANGELOG.md, CONTRIBUTING.md, LICENSE                    | Done   | All five files present                                                                           |
+| 13  | Never publish to npm                                                                        | Done   | No publish script or workflow; only local commits                                                |
+
+## Parsing pipeline
+
+| #   | Requirement                                                                                                                                                                    | Status | Implementation / evidence                                                                                                                |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 14  | Bytes → text honours OFX header CHARSET/ENCODING (1252, ISO-8859-1, USASCII, UTF-8), BOM and XML prolog                                                                        | Done   | `src/encoding/detect.ts`, `labels.ts`; `test/encoding-detect.test.ts`, fixtures 01/04/20                                                 |
+| 15  | Heuristic fallback: valid UTF-8 → UTF-8, else windows-1252                                                                                                                     | Done   | `src/encoding/detect.ts`, `utf8.ts`; `test/encoding-detect.test.ts`                                                                      |
+| 16  | In-house windows-1252 / latin1 decode tables                                                                                                                                   | Done   | `src/encoding/tables.ts`, `decode.ts`; `test/encoding-tables.test.ts`, `test/encoding-decode.test.ts`                                    |
+| 17  | Mojibake repair when the header lies, with a warning                                                                                                                           | Done   | `src/encoding/decode.ts`; fixture 06, `test/cli.test.ts` warning test, `test/cli-spawn.test.ts`                                          |
+| 18  | OFX 1.x key:value header and OFX 2.x `<?OFX ?>` PI; missing/garbage tolerated                                                                                                  | Done   | `src/header.ts`; `test/header.test.ts`, fixtures 04/18/19/32                                                                             |
+| 19  | SGML quirks: unclosed leaves/aggregates, case mismatch, stray whitespace, entities + raw `&`, one-line files, CRLF/LF/CR, trailing garbage, duplicated closing tags, NUL bytes | Done   | `src/sgml/tree.ts`, `entities.ts`; `test/sgml-tree.test.ts`, fixtures 11–17, 30–35                                                       |
+| 20  | Generic tree built before mapping to the model                                                                                                                                 | Done   | `parseSgml` → `mapDocument` in `src/parse.ts`; `test/sgml-tree.test.ts`, `test/fixtures.test.ts`                                         |
+| 21  | Lenient mode never throws; warnings carry code + location                                                                                                                      | Done   | `src/parse.ts`, `types.ts`; arbitrary input/byte/string property tests in `test/parse-property.test.ts` and `test/sgml-property.test.ts` |
+| 22  | `strict: true` throws `OfxParseError` with line/column                                                                                                                         | Done   | `src/errors.ts` + strict branches in header/tree/mapping; `test/parse.test.ts`, `test/cli.test.ts`, `test/cli-spawn.test.ts`             |
+| 23  | Mapping for bank/credit-card statements, multiple statements per file and SIGNONMSGSRSV1                                                                                       | Done   | `src/mapping.ts`, `src/model.ts`; fixtures 02/03/07/27, `test/parse.test.ts`                                                             |
+
+## Normalized model
+
+| #   | Requirement                                                                                                                                    | Status | Implementation / evidence                                                                |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| 24  | `OfxDocument`: header, version, signOn, statements, warnings, encoding                                                                         | Done   | `src/model.ts`; all 38 `.expected.json` snapshots                                        |
+| 25  | `Statement`: kind, currency, account (bankId/bankName/branchId/accountId/accountType), period, balances, transactions                          | Done   | `src/model.ts`, `src/mapping.ts`; `test/fixtures.test.ts`                                |
+| 26  | `Transaction`: id, fitid, type, direction, amount, postedAt, userDate, description, name, memo, checkNumber, refNumber, category, counterparty | Done   | `src/model.ts`, `src/mapping.ts`, `src/enrich.ts`; fixtures 24/25/29                     |
+| 27  | `Money` as `bigint` cents + `toNumber`/pt-BR formatting helpers                                                                                | Done   | `src/money.ts` (`moneyToNumber`, `formatMoney`, `formatOfxAmount`); `test/money.test.ts` |
+
+## Brazilian specifics
+
+| #   | Requirement                                                                                                                                 | Status | Implementation / evidence                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| 28  | Amount formats `-1234.56`, `-1234,56`, `1.234,56`, `1,234.56`, `+10`, spaces, `R$` → exact cents; ambiguity by last separator + digit count | Done   | `src/money.ts`; known vectors + fast-check in `test/money.test.ts`, fixtures 05/22              |
+| 29  | Dates `YYYYMMDD`, `YYYYMMDDHHMMSS`, `.XXX`, `[−3:BRT]`, `[−03:EST]`, `[0:GMT]`, `[−3]` and default `−03:00` configurable via `tz`           | Done   | `src/datetime.ts`, `src/parse.ts`; `test/datetime.test.ts`, fixtures 02/23/37, CLI `--tz` tests |
+| 30  | Invalid dates → warning + best-effort/undefined, never NaN                                                                                  | Done   | `src/datetime.ts`; `test/datetime.test.ts` (properties + `20240230`), fixture 23                |
+| 31  | Bank name from BANKID COMPE (zero-padded), ≥60 institutions including all SPEC-listed codes, source + date in a comment                     | Done   | `src/banks.ts` (65 entries, BCB source + retrieval date); `test/banks.test.ts`, fixture 01      |
+| 32  | Category detection for Pix/TED/DOC/boleto/tarifa/IOF/juros/estorno/saque/card purchase/transfer, accent- and case-insensitive               | Done   | `src/enrich.ts`; `test/enrich.test.ts`, `test/parse-enrich.test.ts`, fixture 24                 |
+| 33  | Counterparty name + CPF/CNPJ, including masked `***.123.456-**`                                                                             | Done   | `src/enrich.ts`; `test/enrich.test.ts`, fixtures 01/24                                          |
+| 34  | Credit-card sign normalization (purchases = debits) and `PARC 02/10` installments                                                           | Done   | `src/enrich.ts`; `test/enrich.test.ts`, `test/parse-enrich.test.ts`, fixture 25                 |
+| 35  | Duplicate FITIDs kept with deterministic `fitid#2` ids + warning                                                                            | Done   | `src/mapping.ts`; fixture 09, `test/fixtures.test.ts`, CLI `--dedupe` tests                     |
+| 36  | Optional `verifyBalance` reports LEDGERBAL mismatch                                                                                         | Done   | `src/mapping.ts`, `src/parse.ts`; `test/parse.test.ts`, fixture 26                              |
+
+## CLI
+
+| #   | Requirement                                                                          | Status | Implementation / evidence                                                                                |
+| --- | ------------------------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------- |
+| 37  | `<files...> --format json\|csv\|ndjson --out --strict --tz --merge --dedupe --quiet` | Done   | `src/node/cli.ts`; `test/cli.test.ts`, `test/cli-spawn.test.ts`                                          |
+| 38  | `--locale pt-BR` (pt-BR number format), `--delimiter` (e.g. `;`), `--bom` for Excel  | Done   | `src/serialize.ts`, `src/node/cli.ts`; `test/serialize.test.ts`, CLI tests (both in-process and spawned) |
+| 39  | RFC 4180 CSV with complete documented columns and one row per transaction            | Done   | `src/serialize.ts`; `test/serialize.test.ts`, CLI tests                                                  |
+| 40  | `--merge` combines files and dedupes by account + FITID/hash                         | Done   | `mergeFiles` in `src/node/cli.ts`; `test/cli.test.ts`, `test/cli-spawn.test.ts`                          |
+| 41  | Exit codes 0 ok / 1 parse/file errors / 2 usage; warnings to stderr unless `--quiet` | Done   | `runCli` in `src/node/cli.ts`; CLI tests assert all three codes and stderr content                       |
+| 42  | Tests spawn the built CLI                                                            | Done   | `test/cli-spawn.test.ts` builds once then spawns `dist/cli.js` as a child process                        |
+
+## Test corpus, properties and performance
+
+| #   | Requirement                                                                                                                                                                                                                            | Status | Implementation / evidence                                                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------- |
+| 43  | ≥25 synthetic realistic OFX files covering the listed quirks (Itaú, Bradesco BRT, Nubank card, Inter XML 2.x, Caixa comma decimals, BB mojibake, multi-statement, truncated, duplicate FITID, empty BANKTRANLIST, huge single-line, …) | Done   | 38 files in `test/fixtures/`, index in `test/fixtures/README.md`                  |
+| 44  | No real personal data; fake CPFs with valid check digits                                                                                                                                                                               | Done   | `test/fixtures/generate.mjs` validates every document number                      |
+| 45  | Snapshot / explicit expected-output test per fixture                                                                                                                                                                                   | Done   | Each `.expected.json` + `test/fixtures.test.ts` hand-derived vectors              |
+| 46  | fast-check property tests for amount parsing and lenient-parser totality                                                                                                                                                               | Done   | `test/money.test.ts`, `test/parse-property.test.ts`, `test/sgml-property.test.ts` |
+| 47  | 100k transactions parsed in < 2 s (generous CI bound)                                                                                                                                                                                  | Done   | `test/parse-performance.test.ts`, `test/sgml-performance.test.ts`                 |
+
+## Hard constraints
+
+| #   | Requirement                                                                                                 | Status | Implementation / evidence                                                    |
+| --- | ----------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------- |
+| 48  | No `git push`, `gh`, `npm publish` or other publishing                                                      | Done   | No such command was run; no publishing script exists                         |
+| 49  | Stay inside the repository                                                                                  | Done   | All work local to this repo                                                  |
+| 50  | Docs must not invent bank behaviour as fact; fixtures described as "modeled after commonly observed quirks" | Done   | `README.md`, `README.pt-BR.md`, `test/fixtures/README.md`, `CONTRIBUTING.md` |
+
+## Gaps found and fixed in this milestone
+
+- `toCsv`/`toJson` were listed in SPEC's exports but missing — implemented in `src/serialize.ts`,
+  exported from `src/index.ts`, and tested.
+- The CLI only printed header/encoding reports — replaced with the complete statement parser, all
+  SPEC flags, strict exit codes and merge/dedupe logic.
+- `README.pt-BR.md` and `CONTRIBUTING.md` were missing — written.
+- CLI tests only used injectable I/O — added spawned-process tests against the built artifact.
+- Strict-mode CLI errors omitted the parse error code and location — `runCli` now prints both.
+
+No requirements remain open.

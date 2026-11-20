@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Full `ofx-br` CLI per SPEC.md: `--format json|csv|ndjson`, `--out`, `--strict`, `--tz`,
+  `--merge`, `--dedupe`, `--quiet`, `--locale pt-BR`, `--delimiter`, `--bom` and `--help`.
+  It parses complete documents (not just headers), writes warnings to stderr with stable codes
+  and locations, honours exit codes 0/1/2, and deduplicates by account + FITID/hash on `--merge`
+  and `--dedupe`. Read/write happens in `src/node/` so the core stays runtime-agnostic.
+- Public export helpers `toJson` and `toCsv` (plus `CSV_COLUMNS`, `UTF8_BOM`,
+  `validateDelimiter` and their types): JSON writes bigint cents as exact decimal strings; CSV is
+  RFC 4180 with configurable delimiter, `en`/`pt-BR` amounts and optional UTF-8 BOM.
+- Documentation: complete English `README.md`, full Brazilian Portuguese `README.pt-BR.md`,
+  `CONTRIBUTING.md`, and updated changelog. CLI tests now spawn the built `dist/cli.js` as a real
+  process, alongside unit tests for every flag and serializer.
 - Memo enrichment (SPEC.md "Transaction enrichment" + "Credit card"), run
   automatically by `parse`/`parseBuffer` and exported piecewise
   (`detectMemoCategory`, `extractCounterparty`, `detectInstallment`,
@@ -132,4 +143,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `parseOfxHeader`: tolerant OFX 1.x key:value header and OFX 2.x
   `<?OFX ...?>` processing-instruction parsing, including XML prolog
   capture, version detection, and byte/line-accurate warnings.
-- `ofx-br` CLI entry point (encoding + header inspection).
+- `ofx-br` CLI entry point (initially encoding + header inspection; the full statement CLI landed
+  in the Unreleased work above).
