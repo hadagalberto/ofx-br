@@ -3,8 +3,10 @@
  * Brazilian banks (OFX 1.x SGML, OFX 2.x XML).
  *
  * Public API. Memo enrichment (Pix/TED/DOC categories, counterparties,
- * installments), CSV/NDJSON export and the full CLI surface arrive with their
- * milestones; everything exported here is stable and fully tested.
+ * installments, card sign normalization) runs as part of `parse`/
+ * `parseBuffer` and is also exposed piecewise. CSV/NDJSON export and the
+ * full CLI surface arrive with their milestones; everything exported here
+ * is stable and fully tested.
  */
 export { detectEncoding } from './encoding/detect.js';
 export { decodeOfx } from './encoding/decode.js';
@@ -43,6 +45,14 @@ export type {
 } from './model.js';
 export type { MappingWarningCode, MappingOptions, MappingResult } from './mapping.js';
 export { mapDocument } from './mapping.js';
+export {
+  detectInstallment,
+  detectMemoCategory,
+  enrichMemo,
+  enrichTransaction,
+  extractCounterparty,
+} from './enrich.js';
+export type { ExtractCounterpartyOptions, MemoEnrichment } from './enrich.js';
 export {
   BRAZILIAN_BANKS,
   normalizeBankId,

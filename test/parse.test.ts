@@ -240,6 +240,8 @@ describe('parse — Itaú-style bank statement', () => {
       description: 'PAGAMENTO BOLETO COMPANHIA ENERGETICA',
       name: 'PAGAMENTO BOLETO',
       memo: 'COMPANHIA ENERGETICA',
+      category: 'boleto',
+      counterparty: { name: 'COMPANHIA ENERGETICA' },
     } satisfies Transaction);
     expect(second).toEqual({
       id: '20240110001',
@@ -298,6 +300,8 @@ describe('parse — Nubank-style credit-card statement (OFX 2.x XML)', () => {
       description: 'PADARIA PÃO DOCE LTDA Compra cartão',
       name: 'PADARIA PÃO DOCE LTDA',
       memo: 'Compra cartão',
+      category: 'card-purchase',
+      counterparty: { name: 'PADARIA PÃO DOCE LTDA' },
     } satisfies Transaction);
     expect(payment?.direction).toBe('credit');
     expect(payment?.amount.cents).toBe(B(150000));

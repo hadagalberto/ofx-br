@@ -18,8 +18,9 @@
 import { normalizeBankId, resolveBank } from './banks.js';
 import { parseOfxDateTime } from './datetime.js';
 import type { OfxDateWarningCode, OfxDateTimeResult } from './datetime.js';
+import { enrichTransaction } from './enrich.js';
 import { OfxParseError } from './errors.js';
-import { parseAmountToCents } from './money.js';
+import { formatOfxAmount, parseAmountToCents } from './money.js';
 import type {
   Account,
   Balance,
@@ -47,6 +48,7 @@ export type MappingWarningCode =
   | 'duplicate-fitid'
   | 'statement-error'
   | 'statement-status-error'
+  | 'balance-mismatch'
   | 'warnings-truncated';
 
 /** Options for {@linkcode mapDocument}. */
@@ -57,6 +59,14 @@ export interface MappingOptions {
   defaultOffsetMinutes?: number;
   /** Throw `OfxParseError` on the first mapping problem instead of collecting warnings. */
   strict?: boolean;
+  /**
+   * Check that the running sum of the statement's transactions equals
+   * `LEDGERBAL` and report a mismatch as a `balance-mismatch` warning (in
+   * strict mode it throws). Only meaningful when the export lists every
+   * movement since the account opening — typical of fresh accounts and
+   * full-history credit-card exports. Default: off.
+   */
+  verifyBalance?: boolean;
 }
 
 /** Result of {@linkcode mapDocument}. */
@@ -367,10 +377,17 @@ function mapBalance(
   return balance;
 }
 
+/** Per-statement mapping context threaded through the response → statement walk. */
+interface StatementContext {
+  readonly kind: StatementKind;
+  readonly verifyBalance: boolean;
+}
+
 /** Maps one `STMTTRN` into a normalized transaction, or `undefined` (warned) when the amount is unparsable. */
 function mapTransaction(
   stmttrn: SgmlElement,
   currency: string,
+  context: StatementContext,
   sink: WarningSink,
   defaultOffsetMinutes: number,
   seenIds: ReadonlySet<string>,
@@ -482,16 +499,20 @@ function mapTransaction(
   if (refNumber !== undefined) {
     transaction.refNumber = refNumber;
   }
+  // Memo enrichment: category, counterparty, installments and, for credit
+  // cards, the "purchases are debits" sign convention.
+  enrichTransaction(transaction, context.kind);
   return transaction;
 }
 
 /** Maps `STMTRS`/`CCSTMTRS` into a normalized statement. */
 function mapStatement(
   response: SgmlElement,
-  kind: StatementKind,
+  context: StatementContext,
   sink: WarningSink,
   defaultOffsetMinutes: number,
 ): Statement {
+  const kind = context.kind;
   const rawCurrency = childText(response, 'CURDEF');
   let currency: string;
   if (rawCurrency === undefined || rawCurrency === '') {
@@ -530,12 +551,8 @@ function mapStatement(
     }
   }
 
-  const ledgerBalance = mapBalance(
-    firstChild(response, 'LEDGERBAL'),
-    currency,
-    sink,
-    defaultOffsetMinutes,
-  );
+  const ledgerElement = firstChild(response, 'LEDGERBAL');
+  const ledgerBalance = mapBalance(ledgerElement, currency, sink, defaultOffsetMinutes);
   const availableBalance = mapBalance(
     firstChild(response, 'AVAILBAL'),
     currency,
@@ -547,11 +564,38 @@ function mapStatement(
   if (tranList !== undefined) {
     const seenIds = new Set<string>();
     for (const stmttrn of childrenNamed(tranList, 'STMTTRN')) {
-      const transaction = mapTransaction(stmttrn, currency, sink, defaultOffsetMinutes, seenIds);
+      const transaction = mapTransaction(
+        stmttrn,
+        currency,
+        context,
+        sink,
+        defaultOffsetMinutes,
+        seenIds,
+      );
       if (transaction !== undefined) {
         transactions.push(transaction);
         seenIds.add(transaction.id);
       }
+    }
+  }
+
+  // Optional balance check (after enrichment, so card-sign normalization is
+  // already applied to the amounts being summed).
+  if (context.verifyBalance && ledgerBalance !== undefined) {
+    let sum = 0n;
+    for (const transaction of transactions) {
+      sum += transaction.amount.cents;
+    }
+    if (sum !== ledgerBalance.amount.cents) {
+      const difference = ledgerBalance.amount.cents - sum;
+      sink.add(
+        'balance-mismatch',
+        `Sum of the listed transactions (${formatOfxAmount({ cents: sum, currency })}) does not ` +
+          `match the ledger balance (${formatOfxAmount(ledgerBalance.amount)}); difference ` +
+          `${formatOfxAmount({ cents: difference, currency })}. verifyBalance assumes the ` +
+          `statement lists every movement since the account opening`,
+        ledgerElement?.offset ?? response.offset,
+      );
     }
   }
 
@@ -568,11 +612,11 @@ function mapStatement(
 /** Maps one `STMTTRNRS`/`CCSTMTTRNRS` into zero or more statements. */
 function mapStatementResponse(
   trnrs: SgmlElement,
-  kind: StatementKind,
+  context: StatementContext,
   sink: WarningSink,
   defaultOffsetMinutes: number,
 ): Statement[] {
-  const responseName = kind === 'bank' ? 'STMTRS' : 'CCSTMTRS';
+  const responseName = context.kind === 'bank' ? 'STMTRS' : 'CCSTMTRS';
   const responses = childrenNamed(trnrs, responseName);
   const status = firstChild(trnrs, 'STATUS');
   const rawCode = status !== undefined ? childText(status, 'CODE') : undefined;
@@ -595,7 +639,7 @@ function mapStatementResponse(
       status?.offset ?? trnrs.offset,
     );
   }
-  return responses.map((response) => mapStatement(response, kind, sink, defaultOffsetMinutes));
+  return responses.map((response) => mapStatement(response, context, sink, defaultOffsetMinutes));
 }
 
 // ------------------------------------------------------------------ entry point
@@ -608,6 +652,7 @@ function mapStatementResponse(
 export function mapDocument(root: SgmlElement, options: MappingOptions): MappingResult {
   const sink = new WarningSink(options.text, options.strict ?? false);
   const defaultOffsetMinutes = options.defaultOffsetMinutes ?? -3 * 60;
+  const verifyBalance = options.verifyBalance ?? false;
 
   let signOn: SignOn | undefined;
   const statements: Statement[] = [];
@@ -633,11 +678,25 @@ export function mapDocument(root: SgmlElement, options: MappingOptions): Mapping
       continue;
     }
     if (element.name === 'STMTTRNRS') {
-      statements.push(...mapStatementResponse(element, 'bank', sink, defaultOffsetMinutes));
+      statements.push(
+        ...mapStatementResponse(
+          element,
+          { kind: 'bank', verifyBalance },
+          sink,
+          defaultOffsetMinutes,
+        ),
+      );
       continue;
     }
     if (element.name === 'CCSTMTTRNRS') {
-      statements.push(...mapStatementResponse(element, 'creditcard', sink, defaultOffsetMinutes));
+      statements.push(
+        ...mapStatementResponse(
+          element,
+          { kind: 'creditcard', verifyBalance },
+          sink,
+          defaultOffsetMinutes,
+        ),
+      );
       continue;
     }
     for (let i = element.children.length - 1; i >= 0; i--) {

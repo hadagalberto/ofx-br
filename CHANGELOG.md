@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Memo enrichment (SPEC.md "Transaction enrichment" + "Credit card"), run
+  automatically by `parse`/`parseBuffer` and exported piecewise
+  (`detectMemoCategory`, `extractCounterparty`, `detectInstallment`,
+  `enrichMemo`, `enrichTransaction`):
+  - **Categories** for pix, TED, DOC, boleto, tarifa, IOF, juros, estorno,
+    saque, card purchase and generic transfer, matched pt-BR case- and
+    accent-insensitively on an index-preserving folded copy of the memo;
+    word-boundary rules keep `DOCX`/`COMPRACARTAO` out, and a documented
+    priority (fees before their operation, refunds before everything)
+    settles multi-keyword memos like "ESTORNO PIX" or "TARIFA DE TED".
+  - **Counterparties**: names extracted after operation keywords
+    ("Pix enviado - FULANO", "TED BANCO X", "compra cartão MERCADO") with
+    original accents preserved and bank-label noise peeled; CPF/CNPJ in full
+    (`123.456.789-09`), masked (`***.123.456-**`) and bare-keyword
+    (`CPF 12345678909`) forms; fee/interest/withdrawal memos carry no
+    counterparty; for card statements whose memo is only the bank label
+    ("Compra cartão"), the merchant comes from `NAME`.
+  - **Installments**: `PARC 02/10`-style plans (`parcela`, `parcelada`,
+    `parcelamento`, squashed `parc02/10`) → `installment: { current, total }`
+    with sane bounds — the keyword requirement keeps date fragments out.
+  - **Credit-card sign normalization**: purchases are debits — a positive
+    purchase (some Brazilian card exporters emit them positive) flips
+    negative, a negative refund flips positive, a detected purchase/refund
+    outranks a mislabelled `TRNTYPE`, ambiguous rows are untouched and bank
+    statements keep amounts exactly as emitted.
+- Optional `verifyBalance` option on `parse`/`parseBuffer`: computes the
+  statement's transaction running sum (after card sign normalization) and
+  reports a `LEDGERBAL` mismatch as a `balance-mismatch` warning with both
+  amounts and the difference, located at the `<LEDGERBAL>` element (thrown
+  in strict mode). Off by default; meaningful for exports that list every
+  movement since the account opening.
 - `parse`/`parseBuffer`: the full pipeline — decode → header → tree →
   normalized model. `OfxDocument` carries the header, version, encoding,
   sign-on (`SONRS`: status, severity, server date, FI org/FID), every bank

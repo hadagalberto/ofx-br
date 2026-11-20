@@ -33,6 +33,13 @@ export interface ParseOptions {
    * `parseBuffer` always records the encoding it actually used.
    */
   encoding?: string;
+  /**
+   * Check that each statement's transaction sum equals its `LEDGERBAL` and
+   * report mismatches as `balance-mismatch` warnings (thrown in strict
+   * mode). Only meaningful when the export lists every movement since the
+   * account opening. Default: off.
+   */
+  verifyBalance?: boolean;
 }
 
 /** The default BRT offset applied to datetimes without a timezone suffix. */
@@ -81,6 +88,7 @@ export function parse(text: string, options: ParseOptions = {}): OfxDocument {
     text,
     defaultOffsetMinutes: offset.minutes,
     strict: options.strict,
+    verifyBalance: options.verifyBalance,
   });
 
   return {
@@ -107,6 +115,7 @@ export function parseBuffer(
     strict: options.strict,
     tz: options.tz,
     encoding: decoded.encoding,
+    verifyBalance: options.verifyBalance,
   });
   document.warnings = [...decoded.warnings, ...document.warnings];
   return document;
