@@ -252,6 +252,7 @@ describe('parse — Itaú-style bank statement', () => {
       postedAt: '2024-01-10T12:00:00-03:00',
       description: 'SALARIO JANEIRO 2024',
       memo: 'SALARIO JANEIRO 2024',
+      category: 'salario',
     } satisfies Transaction);
   });
 

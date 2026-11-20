@@ -19,7 +19,7 @@ MIT licensed · [Português](./README.pt-BR.md) · [SPEC](./SPEC.md) ·
 - **Normalized model**: sign-on, multiple bank and credit-card statements, accounts, periods,
   balances and enriched transactions with exact `bigint` cents and ISO 8601 dates.
 - **Brazilian specifics**: amount formats (`-1234,56`, `1.234,56`, `1,234.56`, `R$ …`), BRT-aware
-  dates with `[−3:BRT]`-style offsets, a 65-institution COMPE/ISPB bank table, 11 Pix/TED/DOC/…
+  dates with `[−3:BRT]`-style offsets, a 65-institution COMPE/ISPB bank table, 14 Pix/TED/DOC/…
   categories, CPF/CNPJ and masked-document extraction, installments and card sign normalization.
 - **Exports**: `toJson`, `toCsv` (RFC 4180) and a full CLI with `json`, `csv` and `ndjson` output.
 
@@ -196,7 +196,7 @@ toCsv(document | documents, opts?: {
 
 ```ts
 detectMemoCategory(memo): PixCategory | undefined          // pix, ted, doc, boleto, tarifa, iof,
-                                                            // juros, estorno, saque, card-purchase, transfer
+                                                            // juros, salario, rendimento, investimento, estorno, saque, card-purchase, transfer
 extractCounterparty(memo, opts?): Counterparty | undefined // names, CPF/CNPJ, masked forms
 detectInstallment(memo): { current, total } | undefined     // 'PARC 02/10'
 enrichMemo(description, opts?): MemoEnrichment
@@ -211,6 +211,29 @@ parseOfxDateTime(raw, defaultOffsetMinutes?): OfxDateTimeResult
 BRAZILIAN_BANKS: readonly BrazilianBank[]     // 65 institutions, COMPE + ISPB + names
 resolveBank(id), resolveBankByCompe(code), resolveBankByIspb(ispb), normalizeBankId(id)
 ```
+
+### Detected categories
+
+`detectMemoCategory` (and the `category` field on parsed transactions) is case- and
+accent-insensitive. Detection is heuristic, modeled after commonly observed Brazilian memo
+patterns; the first matching rule wins in this order:
+
+| Category        | Typical memo                                       | Notes                                                                                                          |
+| --------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `estorno`       | `ESTORNO DE COMPRA`                                | refund; beats every other rule                                                                                 |
+| `tarifa`        | `TARIFA MENSAL`                                    | fee; beats the operation it belongs to                                                                         |
+| `iof`           | `IOF COMPRA INTERNACIONAL`                         | whole word                                                                                                     |
+| `juros`         | `CRÉDITO JUROS POUPANÇA`                           | interest                                                                                                       |
+| `saque`         | `SAQUE CAIXA 24H`                                  | cash withdrawal                                                                                                |
+| `pix`           | `Pix enviado - FULANO`                             | whole word                                                                                                     |
+| `ted`           | `TED 260 NU PAGAMENTOS`                            | whole word                                                                                                     |
+| `doc`           | `DOC 001`                                          | whole word                                                                                                     |
+| `boleto`        | `PAGAMENTO DE BOLETO`                              | substring (squashed labels included)                                                                           |
+| `card-purchase` | `COMPRA CARTÃO`                                    | `compra`/`compras`, whole word                                                                                 |
+| `transfer`      | `TRANSFERÊNCIA ENTRE CONTAS`                       | generic transfer fallback                                                                                      |
+| `salario`       | `CREDITO SALARIO`, `SALÁRIO`, `FOLHA DE PAGAMENTO` | payroll credit; checked after operation keywords                                                               |
+| `rendimento`    | `RENDIMENTO POUPANÇA`, `Rendimentos CDB`           | yield/return; checked after operation keywords                                                                 |
+| `investimento`  | `RESGATE CDB`, `APLICAÇÃO RENDA FIXA`              | `aplicação` needs an instrument word (`cdb`, `lci`, `renda fixa`, …) so a PIX "aplicação" label is not misread |
 
 Encoding detection order: BOM → UTF-16-without-BOM pattern → OFX header `ENCODING`/`CHARSET` →
 XML prolog → heuristic (valid UTF-8 → UTF-8, otherwise windows-1252). Tree building follows OFX

@@ -15,7 +15,10 @@
  * the operation it belongs to and a refund beats everything:
  *
  *     estorno > tarifa > iof > juros > saque > pix > ted > doc >
- *     boleto > card-purchase (compra) > transfer (transferência)
+ *     boleto > card-purchase (compra) > transfer > salario > rendimento > investimento
+ *
+ * The salary/yield/investment labels are fallbacks: an explicit operation
+ * ("TED PARA ... CONTA SALARIO") keeps its own category.
  *
  * Counterparty names are captured after an operation keyword
  * ("Pix enviado - FULANO", "TED BANCO X", "compra cartão MERCADO") and cut
@@ -150,6 +153,22 @@ function hasWholeWord(folded: string, word: string): boolean {
 
 // ------------------------------------------------------------------ category
 
+/**
+ * Instrument words that disambiguate "aplicação" as an investment operation
+ * from the PIX-channel label "pix enviado aplicação <name>" (see module doc).
+ */
+const INVESTMENT_INSTRUMENTS: readonly string[] = [
+  'cdb',
+  'lci',
+  'lca',
+  'renda fixa',
+  'poupanca',
+  'tesouro',
+  'fundo',
+  'debenture',
+  'financeira',
+];
+
 /** Category rules in priority order over the folded memo (see module doc). */
 function categoryOfFolded(folded: string): PixCategory | undefined {
   if (folded.includes('estorn')) {
@@ -184,6 +203,19 @@ function categoryOfFolded(folded: string): PixCategory | undefined {
   }
   if (folded.includes('transf')) {
     return 'transfer';
+  }
+  if (folded.includes('salario') || (folded.includes('folha') && folded.includes('pagamento'))) {
+    return 'salario';
+  }
+  if (folded.includes('rendimento')) {
+    return 'rendimento';
+  }
+  if (
+    folded.includes('resgate') ||
+    folded.includes('investimento') ||
+    (folded.includes('aplicacao') && INVESTMENT_INSTRUMENTS.some((word) => folded.includes(word)))
+  ) {
+    return 'investimento';
   }
   return undefined;
 }

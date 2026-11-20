@@ -154,6 +154,28 @@ describe('parse — enrichment on a bank statement', () => {
         FITID: '9',
         MEMO: 'SALÁRIO',
       }),
+      // Regression: "CREDITO SALARIO" used to get no category at all.
+      stmttrn({
+        TRNTYPE: 'CREDIT',
+        DTPOSTED: '20240111',
+        TRNAMT: '3200.00',
+        FITID: '10',
+        MEMO: 'CREDITO SALARIO',
+      }),
+      stmttrn({
+        TRNTYPE: 'CREDIT',
+        DTPOSTED: '20240112',
+        TRNAMT: '12.34',
+        FITID: '11',
+        MEMO: 'RENDIMENTO POUPANCA',
+      }),
+      stmttrn({
+        TRNTYPE: 'DEBIT',
+        DTPOSTED: '20240113',
+        TRNAMT: '-500.00',
+        FITID: '12',
+        MEMO: 'RESGATE CDB',
+      }),
     ])}`,
   );
 
@@ -167,7 +189,10 @@ describe('parse — enrichment on a bank statement', () => {
       'estorno',
       'saque',
       'transfer',
-      undefined,
+      'salario',
+      'salario',
+      'rendimento',
+      'investimento',
     ]);
   });
 
@@ -182,6 +207,9 @@ describe('parse — enrichment on a bank statement', () => {
     expect(counterparties[6]).toBeUndefined(); // withdrawals carry no counterparty
     expect(counterparties[7]).toBeUndefined(); // label-only transfer memo
     expect(counterparties[8]).toBeUndefined();
+    expect(counterparties[9]).toBeUndefined(); // salary/yield/investment labels
+    expect(counterparties[10]).toBeUndefined();
+    expect(counterparties[11]).toBeUndefined();
   });
 
   it('does not rewarn or renumber ids: enrichment is silent on warnings', () => {
@@ -196,6 +224,9 @@ describe('parse — enrichment on a bank statement', () => {
       '7',
       '8',
       '9',
+      '10',
+      '11',
+      '12',
     ]);
   });
 

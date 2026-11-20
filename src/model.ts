@@ -16,7 +16,8 @@ export type TransactionDirection = 'credit' | 'debit';
 
 /**
  * Category detected from Brazilian memo patterns (Pix, TED, DOC, boleto,
- * tarifa, IOF, juros, estorno, saque, card purchase, generic transfer).
+ * tarifa, IOF, juros, salário, rendimento, investimento, estorno, saque,
+ * card purchase, generic transfer).
  */
 export type PixCategory =
   | 'pix'
@@ -26,6 +27,9 @@ export type PixCategory =
   | 'tarifa'
   | 'iof'
   | 'juros'
+  | 'salario'
+  | 'rendimento'
+  | 'investimento'
   | 'estorno'
   | 'saque'
   | 'card-purchase'

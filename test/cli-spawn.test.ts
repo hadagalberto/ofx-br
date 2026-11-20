@@ -2,11 +2,12 @@
  * End-to-end tests that spawn the *built* CLI (`dist/cli.js`) as a real
  * process, per SPEC's "tests that spawn the built CLI" requirement.
  */
-import { spawnSync, execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
 
 const ROOT = join(import.meta.dirname, '..');
 const CLI = join(ROOT, 'dist', 'cli.js');
@@ -30,16 +31,18 @@ function run(args: readonly string[]): SpawnResult {
   return { status: result.status ?? -1, stdout: result.stdout, stderr: result.stderr };
 }
 
-beforeAll(() => {
-  // Build once so these tests exercise exactly the artifact CI ships.
-  const npmCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
-  execFileSync(process.execPath, [npmCli, 'run', 'build'], {
-    cwd: ROOT,
-    stdio: 'pipe',
-  });
-}, 120_000);
-
 describe('built CLI (spawned process)', () => {
+  it('uses the artifact built once by vitest globalSetup, with no npm-from-node-path', () => {
+    // Regression: the build used to run in `beforeAll` by resolving npm from
+    // the Node installation directory, which is absent on hosted Node 20
+    // toolcache images. The globalSetup tsup build removes that dependency;
+    // `run()` only needs the Node binary itself.
+    expect(existsSync(CLI)).toBe(true);
+    const source = readFileSync(fileURLToPath(import.meta.url), 'utf8');
+    expect(source).not.toMatch(/node_modules[/\\]+npm/);
+    expect(source).not.toMatch(/npm[-_]?cli/);
+  });
+
   it('prints help on stdout and exits 0', () => {
     const result = run(['--help']);
     expect(result.status).toBe(0);

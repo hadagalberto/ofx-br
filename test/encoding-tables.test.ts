@@ -21,6 +21,99 @@ import {
 /** All byte values 0..255 in order. */
 const ALL_BYTES = Uint8Array.from({ length: 256 }, (_, i) => i);
 
+/**
+ * Hard-coded WHATWG windows-1252 index for bytes 0x80–0x9F, transcribed from
+ * the Encoding Standard's index file:
+ *   https://encoding.spec.whatwg.org/index-windows-1252.txt
+ * Unassigned slots keep their C1 controls (U+0081/U+008D/U+008F/U+0090/U+009D).
+ * The main assertions below use these code points directly — never the
+ * runtime's TextDecoder, whose ICU backing differs across Node builds/OSes.
+ */
+const WHATWG_WINDOWS_1252_HIGH: readonly number[] = [
+  0x20ac, 0x0081, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021, 0x02c6, 0x2030, 0x0160, 0x2039,
+  0x0152, 0x008d, 0x017d, 0x008f, 0x0090, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014,
+  0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0x009d, 0x017e, 0x0178,
+];
+
+/** Bytes where true ISO-8859-1 (identity) differs from WHATWG's `iso-8859-1` label (a windows-1252 alias). */
+const EXPECTED_LATIN1_ALIAS_DIVERGENCE: readonly number[] = [
+  0x80, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8e, 0x91, 0x92, 0x93,
+  0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9e, 0x9f,
+];
+
+/** Expected decoded string for all 256 bytes, from the hard-coded WHATWG table. */
+function expectedTableString(high: readonly number[]): string {
+  let out = '';
+  for (let b = 0; b < 256; b++) {
+    out += String.fromCharCode(b >= 0x80 && b <= 0x9f ? (high[b - 0x80] ?? b) : b);
+  }
+  return out;
+}
+
+/** Expected decode of ALL_BYTES under windows-1252, independent of any runtime. */
+const EXPECTED_WINDOWS_1252_ALL_BYTES = expectedTableString(WHATWG_WINDOWS_1252_HIGH);
+
+/** A >8 KiB payload whose bytes cross the decoder's internal chunk boundaries. */
+const CHUNK_PATTERN = Array.from({ length: 9000 }, (_, i) => i % 256);
+
+type DecoderProbe = readonly [readonly number[], string];
+
+/** Returns a decoder only when it exists AND matches the WHATWG probes below. */
+function whatwgDecoder(label: string, probes: readonly DecoderProbe[]): TextDecoder | undefined {
+  if (typeof TextDecoder === 'undefined') {
+    return undefined;
+  }
+  try {
+    const decoder = new TextDecoder(label);
+    for (const [bytes, expected] of probes) {
+      if (decoder.decode(Uint8Array.from(bytes)) !== expected) {
+        return undefined;
+      }
+    }
+    return decoder;
+  } catch {
+    return undefined;
+  }
+}
+
+// Probe unassigned C1 slots too: a runtime that implements real ISO-8859-1
+// under the `iso-8859-1` label fails at 0x80 and is correctly skipped.
+const WINDOWS_1252_PROBES: readonly DecoderProbe[] = [
+  [[0x80], '\u20ac'],
+  [[0x81], '\u0081'],
+  [[0x8c], '\u0152'],
+  [[0x9d], '\u009d'],
+  [[0x9f], '\u0178'],
+];
+const windows1252Oracle = whatwgDecoder('windows-1252', WINDOWS_1252_PROBES);
+const latin1AliasOracle = whatwgDecoder('iso-8859-1', WINDOWS_1252_PROBES);
+const utf8Oracle = whatwgDecoder('utf-8', [
+  [[0xc3, 0xa7], '\u00e7'],
+  [[0xe2, 0x82, 0xac], '\u20ac'],
+]);
+
+/**
+ * Registers an OPTIONAL cross-check. When the runtime decoder is missing or
+ * non-conformant we skip only this one test, log the reason, and leave the
+ * hard-coded assertions (which always run) as the source of truth.
+ */
+function crossCheck(
+  name: string,
+  oracle: TextDecoder | undefined,
+  check: (decoder: TextDecoder) => void,
+): void {
+  if (oracle === undefined) {
+    console.log(
+      `[encoding-tables] skipped ${name}: runtime TextDecoder is unavailable or not WHATWG-compliant; hard-coded assertions still ran.`,
+    );
+  }
+  it.skipIf(oracle === undefined)(name, () => {
+    if (oracle !== undefined) {
+      check(oracle);
+    }
+  });
+}
+
 describe('windows-1252 table', () => {
   it('decodes 0x00-0x7F and 0xA0-0xFF as identity', () => {
     for (const b of [...ALL_BYTES]) {
@@ -30,29 +123,26 @@ describe('windows-1252 table', () => {
     }
   });
 
-  it('maps the 0x80-0x9F range to the WHATWG windows-1252 characters', () => {
-    const spotChecks: [number, number][] = [
-      [0x80, 0x20ac], // €
-      [0x82, 0x201a], // ‚
-      [0x91, 0x2018], // '
-      [0x93, 0x201c], // "
-      [0x96, 0x2013], // –
-      [0x97, 0x2014], // —
-      [0xa9, 0xa9], // © is identity above 0xA0
-    ];
-    for (const [b, code] of spotChecks) {
-      expect(WINDOWS_1252[b]).toBe(code);
+  it('maps every 0x80-0x9F byte to its hard-coded WHATWG code point', () => {
+    for (let i = 0; i < WHATWG_WINDOWS_1252_HIGH.length; i++) {
+      expect(WINDOWS_1252[0x80 + i]).toBe(WHATWG_WINDOWS_1252_HIGH[i]);
     }
-    // Unassigned positions keep their C1 control codes (WHATWG behaviour).
-    for (const b of [0x81, 0x8d, 0x8f, 0x90, 0x9d]) {
-      expect(WINDOWS_1252[b]).toBe(b);
+    for (const b of [0x7f, 0xa9, 0xe9, 0xff]) {
+      expect(WINDOWS_1252[b]).toBe(b); // identity outside the high range
     }
   });
 
-  it('matches TextDecoder("windows-1252") for every byte value', () => {
-    const oracle = new TextDecoder('windows-1252');
-    expect(decodeSingleByte(ALL_BYTES, WINDOWS_1252)).toBe(oracle.decode(ALL_BYTES));
+  it('decodes every byte value to the hard-coded WHATWG code points', () => {
+    expect(decodeSingleByte(ALL_BYTES, WINDOWS_1252)).toBe(EXPECTED_WINDOWS_1252_ALL_BYTES);
   });
+
+  crossCheck(
+    'cross-checks all bytes with a WHATWG-compliant TextDecoder',
+    windows1252Oracle,
+    (d) => {
+      expect(decodeSingleByte(ALL_BYTES, WINDOWS_1252)).toBe(d.decode(ALL_BYTES));
+    },
+  );
 
   it('decodes a Brazilian windows-1252 payload correctly', () => {
     const text = 'Ação é fácil — não há ção, R$ 1.234,56 … “ok”';
@@ -67,24 +157,35 @@ describe('ISO-8859-1 table', () => {
     }
   });
 
-  it('diverges from TextDecoder("iso-8859-1") exactly at the 27 mapped 0x80-0x9F positions (the label is an alias for windows-1252)', () => {
-    const oracle = new TextDecoder('iso-8859-1'); // resolves to windows-1252 per WHATWG
-    const mine = decodeSingleByte(ALL_BYTES, ISO_8859_1);
-    const theirs = oracle.decode(ALL_BYTES);
+  it('diverges from the WHATWG iso-8859-1 label exactly at the 27 mapped 0x80-0x9F positions', () => {
+    // WHATWG maps the `iso-8859-1` label to windows-1252, so its decoded text
+    // differs from true (identity) ISO-8859-1 at every high byte except the
+    // five unassigned slots. Expected positions are hard-coded above.
     const diverging: number[] = [];
     for (let b = 0; b < 256; b++) {
-      if (mine[b] !== theirs[b]) {
+      const whatwg = b >= 0x80 && b <= 0x9f ? (WHATWG_WINDOWS_1252_HIGH[b - 0x80] ?? b) : b;
+      if ((ISO_8859_1[b] ?? b) !== whatwg) {
         diverging.push(b);
       }
     }
-    // Every 0x80-0x9F position except the five WHATWG leaves unassigned
-    // (0x81, 0x8D, 0x8F, 0x90, 0x9D map to identity there too).
-    expect(diverging).toEqual(
-      Array.from({ length: 32 }, (_, i) => 0x80 + i).filter(
-        (b) => ![0x81, 0x8d, 0x8f, 0x90, 0x9d].includes(b),
-      ),
-    );
+    expect(diverging).toEqual(EXPECTED_LATIN1_ALIAS_DIVERGENCE);
   });
+
+  crossCheck(
+    'cross-checks the iso-8859-1 alias divergence with TextDecoder',
+    latin1AliasOracle,
+    (d) => {
+      const mine = decodeSingleByte(ALL_BYTES, ISO_8859_1);
+      const theirs = d.decode(ALL_BYTES);
+      const diverging: number[] = [];
+      for (let b = 0; b < 256; b++) {
+        if (mine[b] !== theirs[b]) {
+          diverging.push(b);
+        }
+      }
+      expect(diverging).toEqual(EXPECTED_LATIN1_ALIAS_DIVERGENCE);
+    },
+  );
 
   it('decodeLatin1 repairs 0x80-0x9F bytes via windows-1252 and counts them', () => {
     // "R$" + 0x97 (windows-1252 em dash) + " 100" + 0xE9 (é, identity in latin1).
@@ -113,11 +214,19 @@ describe('codeUnitsToString chunking', () => {
 
 describe('decodeSingleByte', () => {
   it('decodes a payload crossing chunk boundaries byte-for-byte', () => {
-    const pattern = Array.from({ length: 9000 }, (_, i) => i % 256);
-    const bytes = Uint8Array.from(pattern);
-    const oracle = new TextDecoder('windows-1252');
-    expect(decodeSingleByte(bytes, WINDOWS_1252)).toBe(oracle.decode(bytes));
+    const bytes = Uint8Array.from(CHUNK_PATTERN);
+    const expected = CHUNK_PATTERN.map((b) => EXPECTED_WINDOWS_1252_ALL_BYTES[b] ?? '').join('');
+    expect(decodeSingleByte(bytes, WINDOWS_1252)).toBe(expected);
   });
+
+  crossCheck(
+    'cross-checks chunk-boundary decoding with a WHATWG-compliant TextDecoder',
+    windows1252Oracle,
+    (d) => {
+      const bytes = Uint8Array.from(CHUNK_PATTERN);
+      expect(decodeSingleByte(bytes, WINDOWS_1252)).toBe(d.decode(bytes));
+    },
+  );
 
   it('honours start and end bounds', () => {
     const bytes = latin1Bytes('abcdef');
@@ -224,11 +333,19 @@ describe('decodeUtf8', () => {
     'control \u0000 byte inside',
   ];
 
-  it.each(roundTripVectors)('round-trips %s against the TextDecoder oracle', (text) => {
-    const oracle = new TextDecoder('utf-8');
-    expect(decodeUtf8(utf8Bytes(text))).toBe(oracle.decode(utf8Bytes(text)));
+  it.each(roundTripVectors)('round-trips %s to the original text', (text) => {
     expect(decodeUtf8(utf8Bytes(text))).toBe(text);
   });
+
+  crossCheck(
+    'cross-checks UTF-8 round-trips with a WHATWG-compliant TextDecoder',
+    utf8Oracle,
+    (d) => {
+      for (const text of roundTripVectors) {
+        expect(decodeUtf8(utf8Bytes(text))).toBe(d.decode(utf8Bytes(text)));
+      }
+    },
+  );
 
   it('round-trips a payload crossing chunk boundaries', () => {
     const text = 'é'.repeat(9000);

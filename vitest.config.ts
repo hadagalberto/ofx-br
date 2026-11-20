@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     include: ['test/**/*.test.ts'],
     environment: 'node',
+    // Build once via the tsup API so spawned-CLI tests never resolve npm from
+    // the Node binary path (broken on hosted Node toolcache installations).
+    globalSetup: ['./test/global-setup.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/**'],

@@ -19,7 +19,7 @@ MIT · [English](./README.md) · [SPEC](./SPEC.md) · [Changelog](./CHANGELOG.md
   saldos e transações enriquecidas com centavos exatos (`bigint`) e datas ISO 8601.
 - **Especificidades brasileiras**: formatos de valor (`-1234,56`, `1.234,56`, `1,234.56`,
   `R$ …`), datas com fuso BRT e sufixos como `[−3:BRT]`, tabela de 65 instituições COMPE/ISPB,
-  11 categorias (Pix/TED/DOC/…), extração de CPF/CNPJ inclusive mascarados, parcelas e
+  14 categorias (Pix/TED/DOC/…), extração de CPF/CNPJ inclusive mascarados, parcelas e
   normalização do sinal de compras no cartão.
 - **Saída**: `toJson`, `toCsv` (RFC 4180) e CLI completa com `json`, `csv` e `ndjson`.
 
@@ -196,7 +196,7 @@ toCsv(documento | documentos, opts?: {
 
 ```ts
 detectMemoCategory(memo): PixCategory | undefined          // pix, ted, doc, boleto, tarifa, iof,
-                                                            // juros, estorno, saque, card-purchase, transfer
+                                                            // juros, salario, rendimento, investimento, estorno, saque, card-purchase, transfer
 extractCounterparty(memo, opts?): Counterparty | undefined // nomes, CPF/CNPJ e formas mascaradas
 detectInstallment(memo): { current, total } | undefined     // 'PARC 02/10'
 enrichMemo(descricao, opts?): MemoEnrichment
@@ -211,6 +211,29 @@ parseOfxDateTime(valor, defaultOffsetMinutes?): OfxDateTimeResult
 BRAZILIAN_BANKS: readonly BrazilianBank[]       // 65 instituições, COMPE + ISPB + nomes
 resolveBank(id), resolveBankByCompe(code), resolveBankByIspb(ispb), normalizeBankId(id)
 ```
+
+### Categorias detectadas
+
+`detectMemoCategory` (e o campo `category` das transações parseadas) ignora maiúsculas e acentos.
+A detecção é heurística, modelada após padrões comumente observados em memos brasileiros; a primeira
+regra que casa vence, nesta ordem:
+
+| Categoria       | Memo típico                                        | Observação                                                                                                                  |
+| --------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `estorno`       | `ESTORNO DE COMPRA`                                | reembolso; vence todas as outras regras                                                                                     |
+| `tarifa`        | `TARIFA MENSAL`                                    | tarifa; vence a operação à qual pertence                                                                                    |
+| `iof`           | `IOF COMPRA INTERNACIONAL`                         | palavra inteira                                                                                                             |
+| `juros`         | `CRÉDITO JUROS POUPANÇA`                           | juros                                                                                                                       |
+| `saque`         | `SAQUE CAIXA 24H`                                  | saque em dinheiro                                                                                                           |
+| `pix`           | `Pix enviado - FULANO`                             | palavra inteira                                                                                                             |
+| `ted`           | `TED 260 NU PAGAMENTOS`                            | palavra inteira                                                                                                             |
+| `doc`           | `DOC 001`                                          | palavra inteira                                                                                                             |
+| `boleto`        | `PAGAMENTO DE BOLETO`                              | substring (rótulos grudados incluídos)                                                                                      |
+| `card-purchase` | `COMPRA CARTÃO`                                    | `compra`/`compras`, palavra inteira                                                                                         |
+| `transfer`      | `TRANSFERÊNCIA ENTRE CONTAS`                       | transferência genérica                                                                                                      |
+| `salario`       | `CREDITO SALARIO`, `SALÁRIO`, `FOLHA DE PAGAMENTO` | crédito de folha; verificado após as operações                                                                              |
+| `rendimento`    | `RENDIMENTO POUPANÇA`, `Rendimentos CDB`           | rendimento; verificado após as operações                                                                                    |
+| `investimento`  | `RESGATE CDB`, `APLICAÇÃO RENDA FIXA`              | `aplicação` exige palavra de instrumento (`cdb`, `lci`, `renda fixa`, …) para não confundir com o rótulo "aplicação" do Pix |
 
 Ordem de detecção de codificação: BOM → padrão UTF-16 sem BOM → cabeçalho OFX
 `ENCODING`/`CHARSET` → prologo XML → heurística (UTF-8 válido → UTF-8, senão windows-1252). A

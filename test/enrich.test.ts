@@ -44,6 +44,15 @@ describe('detectMemoCategory', () => {
     ['JUROS', 'juros'],
     ['Juros de mora', 'juros'],
     ['CRÉDITO JUROS POUPANÇA', 'juros'],
+    // salário / rendimento / investimento
+    ['CREDITO SALARIO', 'salario'],
+    ['SALÁRIO MAIO', 'salario'],
+    ['Folha de pagamento', 'salario'],
+    ['RENDIMENTO POUPANÇA', 'rendimento'],
+    ['Rendimentos CDB', 'rendimento'],
+    ['RESGATE CDB', 'investimento'],
+    ['Resgate de investimento', 'investimento'],
+    ['APLICAÇÃO RENDA FIXA', 'investimento'],
     // estorno / saque
     ['ESTORNO', 'estorno'],
     ['Estorno de PIX', 'estorno'],
@@ -71,8 +80,8 @@ describe('detectMemoCategory', () => {
   });
 
   it.each([
-    ['SALARIO MAIO', 'salary is not a category'],
     ['DEPOSITO EM DINHEIRO', 'deposit is not a category'],
+    ['APLICACAO', 'bare "aplicação" without an instrument is not an investment'],
     ['PAGAMENTO FATURA', 'card-bill payment is not a purchase'],
     ['DOCX FEE', 'DOCX is not the DOC operation'],
     ['CREDITADO', 'no whole-word ted/doc/pix hiding inside'],
@@ -95,6 +104,16 @@ describe('detectMemoCategory', () => {
     expect(detectMemoCategory('DOC TRANSFERENCIA')).toBe('doc');
     expect(detectMemoCategory('BOLETO TRANSFERENCIA')).toBe('boleto');
     expect(detectMemoCategory('COMPRAS TRANSF')).toBe('card-purchase');
+    expect(detectMemoCategory('TARIFA DE SALARIO')).toBe('tarifa');
+    expect(detectMemoCategory('ESTORNO SALARIO')).toBe('estorno');
+    expect(detectMemoCategory('JUROS RENDIMENTO')).toBe('juros');
+    expect(detectMemoCategory('TED PARA ITAU UNIBANCO CONTA SALARIO')).toBe('ted');
+    expect(detectMemoCategory('PIX RENDIMENTO')).toBe('pix');
+  });
+
+  it('does not mistake the PIX-channel "aplicação" label for an investment', () => {
+    expect(detectMemoCategory('pix enviado aplicação josé')).toBe('pix');
+    expect(detectMemoCategory('APLICACAO CDB')).toBe('investimento');
   });
 });
 
@@ -225,7 +244,9 @@ describe('enrichMemo', () => {
       counterparty: { name: 'MARIA SOUZA', document: '***.123.456-**' },
     });
     expect(enrichMemo('TARIFA DE TED')).toEqual({ category: 'tarifa' });
-    expect(enrichMemo('SALARIO MAIO')).toEqual({});
+    expect(enrichMemo('CREDITO SALARIO')).toEqual({ category: 'salario' });
+    expect(enrichMemo('RENDIMENTO POUPANCA')).toEqual({ category: 'rendimento' });
+    expect(enrichMemo('RESGATE CDB')).toEqual({ category: 'investimento' });
     expect(enrichMemo('')).toEqual({});
   });
 });

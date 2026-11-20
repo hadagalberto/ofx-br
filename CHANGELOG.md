@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`detectMemoCategory`, `extractCounterparty`, `detectInstallment`,
   `enrichMemo`, `enrichTransaction`):
   - **Categories** for pix, TED, DOC, boleto, tarifa, IOF, juros, estorno,
-    saque, card purchase and generic transfer, matched pt-BR case- and
+    saque, salário, rendimento, investimento, card purchase and generic transfer,
+    matched pt-BR case- and
     accent-insensitively on an index-preserving folded copy of the memo;
     word-boundary rules keep `DOCX`/`COMPRACARTAO` out, and a documented
     priority (fees before their operation, refunds before everything)
@@ -124,6 +125,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Credit-card direction now follows the detected intent even when the amount
   already has the right sign: a refund mislabelled `TRNTYPE>DEBIT` is a
   `credit`, not a debit.
+- `CREDITO SALARIO` (and other salary/yield/investment memos) now get a
+  category; payout labels are fallbacks behind explicit operations, so a
+  `TED … CONTA SALARIO` stays `ted`.
+- Spawned-CLI tests no longer derive an npm entry point from `process.execPath`
+  (broken on hosted Node 20 toolcache images): a Vitest `globalSetup` builds
+  the artifact once through the tsup API and the tests only spawn
+  `node dist/cli.js`.
+- Encoding table tests assert hard-coded WHATWG/Unicode code points instead of
+  trusting the runtime `TextDecoder`; the `TextDecoder` cross-checks are
+  feature-detected and skipped with a logged reason when the runtime decoder
+  is unavailable or non-conformant.
+- Windows checkouts no longer break `prettier --check`: `.gitattributes` keeps
+  all text files LF (`* text=auto eol=lf`) while byte-exact `.ofx` fixtures stay
+  untouched (`*.ofx -text`).
 
 ## [0.1.0] - 2026-11-20
 
