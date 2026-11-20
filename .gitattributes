@@ -1,0 +1,3 @@
+# Fixture bytes are the test data: CRLF, LF, CR-only, NUL and UTF-16 layouts
+# are deliberate. Never let Git normalize them on checkout/commit.
+*.ofx -text
