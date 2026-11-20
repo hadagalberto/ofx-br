@@ -1,0 +1,64 @@
+{
+  "name": "ofx-br",
+  "version": "0.1.0",
+  "description": "Parse bank and credit-card statements exported by Brazilian banks (OFX 1.x SGML, OFX 2.x XML) into a clean, typed JSON model — built for the broken files real banks emit.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Hadagalberto Junior",
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "ofx-br": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "ofx",
+    "ofx-parser",
+    "brazil",
+    "brasil",
+    "banco",
+    "statement",
+    "banking",
+    "sgml",
+    "finance"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.0",
+    "@vitest/coverage-v8": "^4.1.12",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.3.0",
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^4.1.12"
+  }
+}
