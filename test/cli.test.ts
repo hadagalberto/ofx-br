@@ -259,7 +259,7 @@ describe('runCli', () => {
     const io = fakeIO({});
     expect(runCli(['--help'], io)).toBe(0);
     expect(io.stdoutText).toBe(`${CLI_HELP}\n`);
-    expect(CLI_USAGE).toContain('usage: ofx-br <files...>');
+    expect(CLI_USAGE).toContain('usage: ofx-br <files...|->'); // '-' reads stdin
     expect(io.stderrText).toBe('');
   });
 
@@ -387,7 +387,11 @@ describe('runCli', () => {
     expect(doc?.statements[0]?.transactions[0]?.postedAt).toBe('2024-01-05T12:00:00+02:00');
   });
 
-  it('--dedupe drops repeated FITIDs inside a file and reports them', () => {
+  it('--dedupe keeps distinct transactions that merely share a FITID', () => {
+    // Independent review: the duplicate row generated here has a different
+    // date, amount and memo from the primary row. A raw FITID is NOT a dedupe
+    // key, so both rows must survive. The old assertion of a single row
+    // encoded the bug and has been corrected.
     const bytes = makeOfx('A1', '-10', { duplicate: true });
     const plain = fakeIO({ 'dup.ofx': bytes });
     expect(runCli(['dup.ofx'], plain)).toBe(0);
@@ -395,11 +399,8 @@ describe('runCli', () => {
 
     const io = fakeIO({ 'dup.ofx': bytes });
     expect(runCli(['dup.ofx', '--dedupe'], io)).toBe(0);
-    expect(jsonDocuments(io.stdoutText)[0]?.statements[0]?.transactions).toHaveLength(1);
-    expect(io.stderrText).toContain('[duplicate-transaction-dropped]');
-    expect(jsonDocuments(io.stdoutText)[0]?.warnings.map((w) => w.code)).toContain(
-      'duplicate-transaction-dropped',
-    );
+    expect(jsonDocuments(io.stdoutText)[0]?.statements[0]?.transactions).toHaveLength(2);
+    expect(io.stderrText).not.toContain('[duplicate-transaction-dropped]');
   });
 
   it('--merge combines files and dedupes by account + FITID', () => {

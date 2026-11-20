@@ -41,6 +41,10 @@
               "cents": "-13790",
               "currency": "BRL"
             },
+            "rawAmount": {
+              "cents": "13790",
+              "currency": "BRL"
+            },
             "postedAt": "2024-01-10T09:37:00-03:00",
             "description": "PADARIA PÃO DOCE LTDA Compra cartão",
             "name": "PADARIA PÃO DOCE LTDA",
@@ -80,6 +84,10 @@
               "cents": "-20000",
               "currency": "BRL"
             },
+            "rawAmount": {
+              "cents": "20000",
+              "currency": "BRL"
+            },
             "postedAt": "2024-01-18T08:15:00-03:00",
             "description": "COMPRA PARCELADA PARC 03/06",
             "memo": "COMPRA PARCELADA PARC 03/06",
@@ -96,6 +104,10 @@
             "direction": "credit",
             "amount": {
               "cents": "5000",
+              "currency": "BRL"
+            },
+            "rawAmount": {
+              "cents": "-5000",
               "currency": "BRL"
             },
             "postedAt": "2024-01-20T12:00:00-03:00",
@@ -127,6 +139,10 @@
               "cents": "-9000",
               "currency": "BRL"
             },
+            "rawAmount": {
+              "cents": "9000",
+              "currency": "BRL"
+            },
             "postedAt": "2024-01-28T19:45:00-03:00",
             "description": "COMPRA ONLINE PARC12/48",
             "memo": "COMPRA ONLINE PARC12/48",
@@ -153,6 +169,12 @@
         ]
       }
     ],
-    "warningCodes": ["mojibake-repaired"]
+    "warningCodes": [
+      "mojibake-repaired",
+      "card-sign-normalized",
+      "card-sign-normalized",
+      "card-sign-normalized",
+      "card-sign-normalized"
+    ]
   }
 }

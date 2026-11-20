@@ -84,6 +84,19 @@ function pad3(value: number): string {
 }
 
 /**
+ * Converts fractional-hour digits (the `5` in `+5.5`) to whole minutes,
+ * rounding half up in integer math. `5` → 30, `75` → 45, `25` → 15.
+ */
+function fractionHoursToMinutes(fractionDigits: string): number {
+  let numerator = 0;
+  for (let i = 0; i < fractionDigits.length; i++) {
+    numerator = numerator * 10 + (fractionDigits.charCodeAt(i) - 0x30);
+  }
+  const denominator = 10 ** fractionDigits.length;
+  return Math.floor((2 * numerator * 60 + denominator) / (2 * denominator));
+}
+
+/**
  * Parses a timezone offset option: `'-03:00'`, `'-3'`, `'3'`, `'+05:30'`.
  * Returns minutes east of UTC, or `undefined` when the value is not a valid
  * offset (the caller falls back to the SPEC default and warns).
@@ -111,6 +124,15 @@ export function parseTimeZoneOffset(raw: string): number | undefined {
     return undefined;
   }
   let minutes = 0;
+  // Decimal hours: `+5.5` = +05:30, `-3.5` = -03:30, `+5.75` = +05:45.
+  if (trimmed.charCodeAt(pos) === 0x2e /* . */ && isDigitCode(trimmed.charCodeAt(pos + 1))) {
+    let end = pos + 1;
+    while (end < trimmed.length && isDigitCode(trimmed.charCodeAt(end))) {
+      end++;
+    }
+    minutes = fractionHoursToMinutes(trimmed.slice(pos + 1, end));
+    pos = end;
+  }
   if (trimmed.charCodeAt(pos) === 0x3a /* : */) {
     pos++;
     let minuteDigits = 0;
@@ -239,6 +261,16 @@ function parseOffsetSuffix(
   }
   let minutes = 0;
   let clampedTo: number | undefined;
+  // Decimal hours: `[+5.5:IST]` = +05:30, `[-3.5]` = -03:30. An explicit
+  // numeric field after ':' still wins over the fractional part.
+  if (trimmed.charCodeAt(pos) === 0x2e /* . */ && isDigitCode(trimmed.charCodeAt(pos + 1))) {
+    let end = pos + 1;
+    while (end < trimmed.length && isDigitCode(trimmed.charCodeAt(end))) {
+      end++;
+    }
+    minutes = fractionHoursToMinutes(trimmed.slice(pos + 1, end));
+    pos = end;
+  }
   if (trimmed.charCodeAt(pos) === 0x3a /* : */) {
     const after = trimmed.charCodeAt(pos + 1);
     if (isDigitCode(after)) {

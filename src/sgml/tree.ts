@@ -57,6 +57,8 @@ export type SgmlWarningCode =
   | 'nul-byte'
   | 'unterminated-tag'
   | 'unterminated-comment'
+  | 'unterminated-cdata'
+  | 'implicit-sibling-close'
   | 'warnings-truncated';
 
 /** One element of the generic parse tree. */
@@ -107,6 +109,13 @@ const MAX_WARNINGS = 1000;
 
 /** Name of the synthetic document root. */
 const DOCUMENT_ROOT_NAME = '#document';
+
+/**
+ * Aggregates the OFX DTD declares as siblings, never nested: an unclosed
+ * `<LEDGERBAL>` must not swallow the following `<AVAILBAL>` (independent
+ * review finding 7). Opening one closes any member of this set still open.
+ */
+const EXCLUSIVE_SIBLING_AGGREGATES: ReadonlySet<string> = new Set(['LEDGERBAL', 'AVAILBAL']);
 
 interface BuilderOptions {
   readonly startOffset: number;
@@ -588,6 +597,27 @@ class SgmlBuilder {
       }
       this.stack.length = siblingIndex;
     }
+    // An aggregate from the exclusive-sibling set cannot be an ancestor of a
+    // peer aggregate. Recover by closing the peer implicitly instead of
+    // nesting the new element under it, and say so explicitly.
+    if (EXCLUSIVE_SIBLING_AGGREGATES.has(name)) {
+      const clash = this.findExclusiveSibling();
+      const open = this.stack[clash];
+      if (clash >= 0 && open !== undefined) {
+        for (let i = clash; i < this.stack.length; i++) {
+          const frame = this.stack[i];
+          if (frame !== undefined) {
+            this.finalizeImplicit(frame);
+          }
+        }
+        this.stack.length = clash;
+        this.report(
+          'implicit-sibling-close',
+          `Element <${open.name}> cannot contain <${name}>; it was closed implicitly`,
+          openOffset,
+        );
+      }
+    }
     const parent = this.stack[this.stack.length - 1]?.element ?? this.root;
     const element: SgmlElement = { name, offset: openOffset, children: [], attributes };
     parent.children.push(element);
@@ -701,6 +731,9 @@ class SgmlBuilder {
     if (this.text.startsWith('<!--', start)) {
       return this.scanComment(start);
     }
+    if (this.text.startsWith('<![CDATA[', start)) {
+      return this.scanCdata(start);
+    }
     const pos = this.skipUntilGt(start + 2);
     if (pos >= this.text.length) {
       this.report('unterminated-tag', 'Document ended inside a declaration', start);
@@ -728,6 +761,43 @@ class SgmlBuilder {
     }
     this.report('unterminated-comment', 'Comment has no terminating "-->"', start);
     return length;
+  }
+
+  /**
+   * CDATA content is literal text: `&` and `<` inside it are not entities or
+   * markup. Everything up to the first `]]>` is routed to the current element
+   * verbatim (independent review finding 3).
+   */
+  private scanCdata(start: number): number {
+    const contentStart = start + '<![CDATA['.length;
+    const close = this.text.indexOf(']]>', contentStart);
+    if (close < 0) {
+      this.report('unterminated-cdata', 'CDATA section has no terminating "]]>"', start);
+      this.routeCdata(this.text.slice(contentStart), contentStart);
+      return this.text.length;
+    }
+    this.routeCdata(this.text.slice(contentStart, close), contentStart);
+    return close + ']]>'.length;
+  }
+
+  /** Attaches literal CDATA text to the open element, counting any NUL bytes. */
+  private routeCdata(value: string, offset: number): void {
+    let literal = '';
+    for (let i = 0; i < value.length; i++) {
+      if (value.charCodeAt(i) === 0) {
+        this.noteNul(offset + i);
+        continue;
+      }
+      literal += value.charAt(i);
+    }
+    let contentOffset = -1;
+    for (let i = 0; i < literal.length; i++) {
+      if (!isWsCode(literal.charCodeAt(i))) {
+        contentOffset = i;
+        break;
+      }
+    }
+    this.routeChunk(literal, offset, contentOffset >= 0, contentOffset);
   }
 
   private scanProcessingInstruction(start: number): number {
@@ -790,6 +860,17 @@ class SgmlBuilder {
   private findInStack(name: string): number {
     for (let i = this.stack.length - 1; i >= 0; i--) {
       if (this.stack[i]?.name === name) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /** Innermost open aggregate that belongs to the exclusive-sibling set. */
+  private findExclusiveSibling(): number {
+    for (let i = this.stack.length - 1; i >= 0; i--) {
+      const name = this.stack[i]?.name;
+      if (name !== undefined && EXCLUSIVE_SIBLING_AGGREGATES.has(name)) {
         return i;
       }
     }

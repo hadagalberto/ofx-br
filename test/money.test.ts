@@ -69,7 +69,9 @@ describe('parseAmountToCents — SPEC formats', () => {
     ['1.234,', 123400n],
     ['12,34,', 123400n],
     // Mixed with the decimal separator last (the SPEC's ambiguity rule).
-    ['0.005', 500n], // 3 digits after a single separator → thousands group
+    // Independent review: a leading-zero integer part can never be a thousands
+    // group. 0.005 reais = 0.5 cents → 1 cent (half away from zero), not 500.
+    ['0.005', 1n],
     ['1.005', 100500n],
     ['1,005', 100500n],
     // 4+ digits after a single separator: decimal fraction, rounded half away from zero.

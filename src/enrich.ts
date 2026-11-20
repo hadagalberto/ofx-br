@@ -59,6 +59,17 @@ export interface ExtractCounterpartyOptions {
   kind?: StatementKind;
 }
 
+/** An informational observation made by the enrichment pass. */
+export interface EnrichWarning {
+  /** Stable machine-readable code. */
+  code: 'card-sign-normalized';
+  /** Human-readable description of the rewrite (kept in `rawAmount`). */
+  message: string;
+}
+
+/** Optional sink for {@linkcode EnrichWarning}s, so callers can report rewrites. */
+export type EnrichWarningSink = (warning: EnrichWarning) => void;
+
 // ------------------------------------------------------------------- folding
 
 /**
@@ -353,6 +364,12 @@ const LEADING_NOISE = new Set([
   'enviada',
   'recebido',
   'recebida',
+  // Bank routing markers often glued to the name ("DES: FULANO", "REM: ...").
+  'des',
+  'rem',
+  'descricao',
+  'remetente',
+  'destinatario',
   'aplicacao',
   'internet',
   'cpf',
@@ -427,30 +444,73 @@ function hasCounterpartyKeyword(folded: string): boolean {
   );
 }
 
+/** Punctuation and quotes banks paste around counterparty names. */
+const NAME_EDGE_RE = /^[-\s|:,."'“”‘’]+|[-:\s|,."'“”‘’]+$/g;
+
 /**
- * Cleans a raw capture into a counterparty name: trims separators, peels
- * leading operation keywords, and requires the remainder to start with a
- * letter (rejects leftover amounts, dates and masked documents).
+ * A trailing date (`15/01`, `15/01/2024`, `2024-01-15`) is metadata, not part
+ * of a name. Folding is 1:1, so the match offsets slice the original text.
+ */
+function stripTrailingDate(text: string): string {
+  const match = /\s+\d{1,4}[-/.]\d{1,2}(?:[-/.]\d{2,4})?\s*$/.exec(foldPtBr(text));
+  return match === null ? text : text.slice(0, match.index);
+}
+
+/**
+ * True when a candidate holds an account/document-number-like token. Only
+ * long digit runs, leading-zero numbers and numbers following an explicit
+ * "number" keyword are rejected: a name may legitimately contain a four-digit
+ * token ("PADARIA 2000 LTDA"), which the old `\d{4,}` rule discarded
+ * (independent review finding 6).
+ */
+function hasAccountLikeToken(folded: string): boolean {
+  for (const match of folded.matchAll(/\d+/g)) {
+    const token = match[0];
+    if (token.length >= 5 || (token.length >= 3 && token.startsWith('0'))) {
+      return true;
+    }
+    if (
+      token.length === 4 &&
+      /\b(?:numero|num|conta|agencia|ag|documento|doc|codigo|cod|ref|lote)\s*[:.-]?\s*$/.test(
+        folded.slice(0, match.index),
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Cleans a raw capture into a counterparty name: trims separators/quotes,
+ * peels leading operation keywords and DES:/REM: markers, drops trailing
+ * dates, and requires the remainder to start with a letter (rejects leftover
+ * amounts and masked documents).
  */
 function cleanCandidate(raw: string): string | undefined {
-  let text = raw.replace(/^[-\s|:,]+/, '').replace(/[-\s|:,]+$/, '');
+  let text = raw.replace(NAME_EDGE_RE, '');
   let folded = foldPtBr(text);
   for (;;) {
     const spaceAt = folded.indexOf(' ');
     const word = spaceAt === -1 ? folded : folded.slice(0, spaceAt);
-    if (word === '' || !LEADING_NOISE.has(word)) {
+    // Keywords can carry punctuation ("enviado:", "DES:"): compare the bare
+    // word so prefixes are stripped case- and punctuation-insensitively.
+    const bare = word.replace(/[-:.|,]+$/, '');
+    if (word === '' || !LEADING_NOISE.has(bare)) {
       break;
     }
     text = spaceAt === -1 ? '' : text.slice(spaceAt + 1);
     folded = spaceAt === -1 ? '' : folded.slice(spaceAt + 1);
   }
+  text = stripTrailingDate(text).replace(NAME_EDGE_RE, '');
+  folded = foldPtBr(text);
   if (text.length < 2) {
     return undefined;
   }
   if (folded.startsWith('r$')) {
     return undefined; // leftover amount ("PIX ENVIADO R$ 100,00 …")
   }
-  if (/\d{4,}/.test(folded)) {
+  if (hasAccountLikeToken(folded)) {
     return undefined; // an account/number fragment, not a name ("NUMERO 12345 …")
   }
   const first = folded.charCodeAt(0);
@@ -607,7 +667,11 @@ export function enrichMemo(
  * amount is flipped positive, and the direction follows the intent. Bank
  * statements are never rewritten.
  */
-export function enrichTransaction(transaction: Transaction, kind: StatementKind): void {
+export function enrichTransaction(
+  transaction: Transaction,
+  kind: StatementKind,
+  warn?: EnrichWarningSink,
+): void {
   const enrichment = enrichMemo(transaction.description, {
     name: transaction.name,
     kind,
@@ -622,7 +686,7 @@ export function enrichTransaction(transaction: Transaction, kind: StatementKind)
     transaction.installment = enrichment.installment;
   }
   if (kind === 'creditcard') {
-    normalizeCardSign(transaction);
+    normalizeCardSign(transaction, warn);
   }
 }
 
@@ -631,7 +695,7 @@ export function enrichTransaction(transaction: Transaction, kind: StatementKind)
  * `estorno` outranks the raw `TRNTYPE`, a detected purchase outranks a
  * mislabelled `CREDIT`, and rows with no unambiguous intent are untouched.
  */
-function normalizeCardSign(transaction: Transaction): void {
+function normalizeCardSign(transaction: Transaction, warn?: EnrichWarningSink): void {
   const upperType = transaction.type.toUpperCase();
   let intent: 'credit' | 'debit';
   if (transaction.category === 'estorno') {
@@ -644,10 +708,21 @@ function normalizeCardSign(transaction: Transaction): void {
     return;
   }
   const cents = transaction.amount.cents;
-  if (intent === 'debit' && cents > 0n) {
+  const flips = (intent === 'debit' && cents > 0n) || (intent === 'credit' && cents < 0n);
+  if (flips) {
+    // Preserve the emitted value and make the rewrite visible: `amount` is a
+    // normalized view, not the raw TRNAMT (independent review finding 9).
+    transaction.rawAmount = { ...transaction.amount };
     transaction.amount = { cents: -cents, currency: transaction.amount.currency };
-  } else if (intent === 'credit' && cents < 0n) {
-    transaction.amount = { cents: -cents, currency: transaction.amount.currency };
+    if (warn !== undefined) {
+      warn({
+        code: 'card-sign-normalized',
+        message:
+          `Credit-card amount ${cents.toString()} cents was rewritten to ` +
+          `${(-cents).toString()} cents to enforce "purchases are debits"; ` +
+          `the emitted value is kept in rawAmount`,
+      });
+    }
   }
   // The direction follows the detected intent even when the amount already
   // had the right sign (e.g. a refund mislabelled `TRNTYPE>DEBIT`).

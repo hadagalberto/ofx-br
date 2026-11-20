@@ -61,6 +61,66 @@ describe('lenient parse is total (property tests)', () => {
     );
   });
 
+  it('keeps the single realistic row exact at every truncation point', () => {
+    // Invariant, not just totality: BODY has exactly one STMTTRN with
+    // TRNAMT -89.90 → -8990 cents (hand-derived). Once that whole token is
+    // present, every longer prefix must preserve it exactly, and no prefix
+    // may invent a second row. Cuts inside the token legitimately leave a
+    // shorter *valid* amount (e.g. "-8" → -800 cents), so those are excluded
+    // rather than mislabelled as corruption.
+    const amountEnd = BODY.indexOf('-89.90') + '-89.90'.length;
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: BODY.length }), (cut) => {
+        const rows = parse(BODY.slice(0, cut)).statements.flatMap((s) => s.transactions);
+        expect(rows.length).toBeLessThanOrEqual(1);
+        if (rows.length === 1 && cut >= amountEnd) {
+          expect(rows[0]?.amount.cents).toBe(-8990n);
+        }
+      }),
+      { numRuns: 400 },
+    );
+  });
+
+  it('drops no transaction and round-trips every amount (constructive properties)', () => {
+    // The amount string is formatted here, independently of the library's
+    // formatters, from the integer cents we expect to get back.
+    const amountText = (cents: bigint): string => {
+      const negative = cents < 0n;
+      const magnitude = negative ? -cents : cents;
+      const text = `${magnitude / 100n}.${(magnitude % 100n).toString().padStart(2, '0')}`;
+      return negative ? `-${text}` : text;
+    };
+    const centsArb = fc.bigInt({ min: -1_000_000n, max: 1_000_000n });
+    const memoArb = fc.stringMatching(/^[A-Z ]{1,16}$/);
+    const rowsArb = fc.array(fc.tuple(centsArb, memoArb), { maxLength: 12 });
+
+    fc.assert(
+      fc.property(rowsArb, (rows) => {
+        const blocks = rows
+          .map(
+            ([cents, memo], index) =>
+              `<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20240101<TRNAMT>${amountText(cents)}` +
+              `<FITID>row-${index}</FITID><MEMO>${memo}</MEMO></STMTTRN>`,
+          )
+          .join('');
+        const text =
+          'OFXHEADER:100\nVERSION:102\nENCODING:USASCII\n\n\n' +
+          '<OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><CURDEF>BRL' +
+          '<BANKACCTFROM><ACCTID>acc</ACCTID></BANKACCTFROM>' +
+          `<BANKTRANLIST>${blocks}</BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>`;
+        const transactions = parse(text).statements.flatMap((s) => s.transactions);
+        // No transaction silently dropped: one parsed row per STMTTRN written.
+        expect(transactions).toHaveLength(rows.length);
+        expect((text.match(/<STMTTRN>/g) ?? []).length).toBe(rows.length);
+        // Amounts round-trip exactly, including the sign.
+        expect(transactions.map((t) => t.amount.cents)).toEqual(rows.map(([cents]) => cents));
+        // Ids stay unique even when memos collide.
+        expect(new Set(transactions.map((t) => t.id)).size).toBe(rows.length);
+      }),
+      { numRuns: 200 },
+    );
+  });
+
   it('strict mode only ever throws OfxParseError', () => {
     fc.assert(
       fc.property(fc.string({ maxLength: 500 }), (text) => {

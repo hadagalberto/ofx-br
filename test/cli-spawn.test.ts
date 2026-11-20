@@ -46,7 +46,7 @@ describe('built CLI (spawned process)', () => {
   it('prints help on stdout and exits 0', () => {
     const result = run(['--help']);
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain('usage: ofx-br <files...>');
+    expect(result.stdout).toContain('usage: ofx-br <files...|->'); // '-' reads stdin
     expect(result.stdout).toContain('--delimiter');
     expect(result.stderr).toBe('');
   });
@@ -154,7 +154,9 @@ describe('built CLI (spawned process)', () => {
     expect(dirty.stderr).toContain('missing-header');
   });
 
-  it('--dedupe drops repeated FITIDs kept by the parser', () => {
+  it('--dedupe keeps distinct transactions that share a FITID', () => {
+    // Fixture 09's rows share FITID "DUP" but differ in date, amount and memo.
+    // The old assertion (fewer rows after --dedupe) encoded the review bug.
     const file = join(FIXTURES, '09-duplicate-fitids.ofx');
     const plain = JSON.parse(run([file]).stdout) as {
       statements: { transactions: unknown[] }[];
@@ -164,10 +166,10 @@ describe('built CLI (spawned process)', () => {
     const deduped = JSON.parse(dedupedResult.stdout) as {
       statements: { transactions: unknown[] }[];
     }[];
-    expect(deduped[0]?.statements[0]?.transactions.length).toBeLessThan(
+    expect(deduped[0]?.statements[0]?.transactions).toHaveLength(
       plain[0]?.statements[0]?.transactions.length ?? 0,
     );
-    expect(dedupedResult.stderr).toContain('[duplicate-transaction-dropped]');
+    expect(dedupedResult.stderr).not.toContain('[duplicate-transaction-dropped]');
   });
 
   it('--merge combines files and removes overlapping FITIDs', () => {

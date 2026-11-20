@@ -410,7 +410,7 @@ describe('parse — duplicate and missing FITIDs', () => {
     expect(again.statements[0]?.transactions.map((t) => t.id)).toEqual(['dup', 'dup#2', 'dup#3']);
   });
 
-  it('hashes missing FITIDs deterministically and silently', () => {
+  it('hashes missing FITIDs deterministically and warns that a hash was used', () => {
     const noFitid = bankBody([
       stmttrn({ TRNTYPE: 'DEBIT', DTPOSTED: '20240101', TRNAMT: '-10.00' }),
       stmttrn({ TRNTYPE: 'DEBIT', DTPOSTED: '20240101', TRNAMT: '-10.00' }), // identical row
@@ -426,7 +426,13 @@ describe('parse — duplicate and missing FITIDs', () => {
     expect(ids[2]).not.toBe(ids[0]);
     expect(docB.statements[0]?.transactions.map((t) => t.id)).toEqual(ids); // deterministic
     expect(docA.statements[0]?.transactions.every((t) => t.fitid === undefined)).toBe(true);
-    expect(warningsOf(docA)).toEqual([]); // fitid-less rows are not a warning
+    // Independent review: using a content hash instead of a FITID must be
+    // reported. The old `[]` assertion encoded the silent behavior.
+    expect(warningsOf(docA).map((warning) => warning.code)).toEqual([
+      'missing-fitid',
+      'missing-fitid',
+      'missing-fitid',
+    ]);
   });
 });
 

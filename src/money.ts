@@ -14,7 +14,10 @@
  * - one kind of separator, appearing once:
  *   - nothing before it → decimal (`,50` → 50 cents, `,500` → 0.500 → 50 cents);
  *   - 1–2 digits after → decimal (`1234,5` → 123450, `1234,56` → 123456);
- *   - 3 digits after → thousands group (`1.234` → 123400, `2.500` → 250000);
+ *   - 3 digits after → thousands group (`1.234` → 123400, `2.500` → 250000),
+ *     **except** when the integer part starts with `0`: a leading zero can
+ *     never be a thousands group, so `0.125` → 0.125 → 13 cents and
+ *     `-0.500` → -50 cents (`0,005` → 0.5 cents → 1 cent);
  *   - 4+ digits after → decimal fraction, rounded half away from zero
  *     (`1,2345` → 1.2345 → 123 cents);
  * - one kind of separator, appearing twice or more → all occurrences are
@@ -22,6 +25,14 @@
  *
  * Fractional digits beyond two (never emitted by real banks, tolerated here)
  * round half away from zero.
+ *
+ * Ambiguity: a single separator with exactly three digits after it and a
+ * non-leading-zero integer part (`10.500`) is genuinely undecidable — a
+ * Brazilian exporter may mean ten thousand reais, an American one ten and a
+ * half. This module keeps the documented thousands reading (SPEC's "digit
+ * count" rule) but reports an `amount-ambiguous` warning when the caller
+ * supplies a warning sink, so the CLI/user can see the choice being made.
+ * Callers that do not care (the fast path) simply omit the sink.
  */
 
 /** Money as exact integer cents — never floats. */
@@ -34,6 +45,17 @@ export interface Money {
 
 /** Result of {@linkcode parseAmountToCents}: exact cents, or `undefined` when the value is not an amount. */
 export type AmountParseResult = bigint | undefined;
+
+/** A non-fatal observation made while interpreting an amount. */
+export interface AmountWarning {
+  /** Stable machine-readable code. */
+  code: 'amount-ambiguous';
+  /** Human-readable description of the interpretation that was chosen. */
+  message: string;
+}
+
+/** Optional sink for {@linkcode AmountWarning}s raised by amount parsing. */
+export type AmountWarningSink = (warning: AmountWarning) => void;
 
 /** Characters stripped from amount values: ASCII whitespace, BOM and the Unicode spaces banks paste in. */
 function isAmountNoise(code: number): boolean {
@@ -124,7 +146,7 @@ function scaledToCents(totalUnits: bigint, scale: number): bigint {
  * NBSP whitespace. Returns `undefined` when the value is not an amount —
  * the caller reports that as a warning.
  */
-export function parseAmountToCents(raw: string): AmountParseResult {
+export function parseAmountToCents(raw: string, warn?: AmountWarningSink): AmountParseResult {
   const stripped = stripAmount(raw);
   if (stripped === undefined) {
     return undefined;
@@ -207,12 +229,24 @@ export function parseAmountToCents(raw: string): AmountParseResult {
 
   // Exactly one separator with an integer part: digit count decides.
   const fracLength = fracRaw.length;
-  if (fracLength === 0 || fracLength === 3) {
+  if (fracLength === 0 || (fracLength === 3 && !intRaw.startsWith('0'))) {
     // `1234,` or `1.234` / `2.500` — a (possibly trailing) thousands group.
+    // A leading-zero integer part (`0.125`) can never be a thousands group and
+    // falls through to the decimal-fraction branch below.
+    if (fracLength === 3 && warn !== undefined) {
+      warn({
+        code: 'amount-ambiguous',
+        message:
+          `Amount ${JSON.stringify(raw)} has exactly three digits after a single ` +
+          `separator; it was read as a thousands group (${(BigInt(intRaw + fracRaw) * 100n).toString()} cents). ` +
+          `A leading-zero integer part would instead be read as a decimal fraction`,
+      });
+    }
     const cents = BigInt(intRaw + fracRaw) * 100n;
     return stripped.negative ? -cents : cents;
   }
-  // 1, 2 or 4+ digits after the separator: a decimal fraction.
+  // 1, 2 or 4+ digits after the separator (or a leading-zero integer part):
+  // a decimal fraction.
   const total = BigInt(intRaw + fracRaw);
   const cents = scaledToCents(total, fracLength);
   return stripped.negative ? -cents : cents;

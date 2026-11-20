@@ -126,8 +126,14 @@ export interface Transaction {
   type: string;
   /** Money in (`credit`) or out (`debit`); from `TRNTYPE`, else from the amount sign. */
   direction: TransactionDirection;
-  /** Exact amount; `TRNAMT` sign preserved as emitted. */
+  /** Exact amount. For credit-card purchases/refunds this is the normalized
+   * "purchases are debits" value; the value as emitted by the bank is kept in
+   * {@linkcode rawAmount} and every rewrite emits a `card-sign-normalized`
+   * warning. Bank statements keep the emitted sign in `amount` untouched. */
   amount: Money;
+  /** Amount exactly as emitted in `TRNAMT`, before card-sign normalization.
+   * Present only when normalization rewrote the sign. */
+  rawAmount?: Money;
   /** `DTPOSTED` as ISO 8601 with offset (default `-03:00`); `''` when missing (warned). */
   postedAt: string;
   /** `DTUSER` as ISO 8601, when present and parsable. */

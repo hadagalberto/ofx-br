@@ -70,6 +70,6 @@
         ]
       }
     ],
-    "warningCodes": ["duplicate-fitid", "duplicate-fitid"]
+    "warningCodes": ["duplicate-fitid", "duplicate-fitid", "missing-fitid"]
   }
 }

@@ -21,6 +21,7 @@ import type { OfxDateWarningCode, OfxDateTimeResult } from './datetime.js';
 import { enrichTransaction } from './enrich.js';
 import { OfxParseError } from './errors.js';
 import { formatOfxAmount, parseAmountToCents } from './money.js';
+import type { AmountWarning } from './money.js';
 import type {
   Account,
   Balance,
@@ -40,12 +41,16 @@ import type { ParseWarning } from './types.js';
 export type MappingWarningCode =
   | OfxDateWarningCode
   | 'invalid-amount'
+  | 'amount-ambiguous'
   | 'invalid-status-code'
   | 'missing-dtposted'
   | 'missing-trntype'
   | 'missing-account-id'
   | 'missing-currency'
   | 'duplicate-fitid'
+  | 'missing-fitid'
+  | 'repeated-leaf'
+  | 'card-sign-normalized'
   | 'statement-error'
   | 'statement-status-error'
   | 'balance-mismatch'
@@ -237,6 +242,13 @@ function hashTransaction(stmttrn: SgmlElement): string {
   return `hash-${fnv64Hex(raw)}`;
 }
 
+/** Relays amount-interpretation warnings (e.g. `10.500`) into the mapping sink. */
+function amountWarnings(sink: WarningSink, offset: number): (warning: AmountWarning) => void {
+  return (warning: AmountWarning) => {
+    sink.add(warning.code, warning.message, offset);
+  };
+}
+
 // ------------------------------------------------------------------ date relay
 
 /** Parses an OFX date leaf and relays its warnings into the sink. */
@@ -354,7 +366,7 @@ function mapBalance(
     return undefined;
   }
   const rawAmount = childText(element, 'BALAMT') ?? '';
-  const cents = parseAmountToCents(rawAmount);
+  const cents = parseAmountToCents(rawAmount, amountWarnings(sink, element.offset));
   if (cents === undefined) {
     sink.add(
       'invalid-amount',
@@ -392,9 +404,28 @@ function mapTransaction(
   defaultOffsetMinutes: number,
   seenIds: ReadonlySet<string>,
 ): Transaction | undefined {
+  // A leaf repeated inside one STMTTRN is a broken export: the first value
+  // wins, but the discarded copy must be reported instead of silently lost
+  // (independent review finding 8).
+  const seenLeafNames = new Set<string>();
+  for (const child of stmttrn.children) {
+    if (seenLeafNames.has(child.name)) {
+      sink.add(
+        'repeated-leaf',
+        `Leaf <${child.name}> appears more than once inside <STMTTRN>; only the first value was kept`,
+        child.offset,
+      );
+    } else {
+      seenLeafNames.add(child.name);
+    }
+  }
+
   const amountElement = firstChild(stmttrn, 'TRNAMT');
   const rawAmount = amountElement?.text;
-  const cents = rawAmount !== undefined ? parseAmountToCents(rawAmount) : undefined;
+  const cents =
+    rawAmount !== undefined
+      ? parseAmountToCents(rawAmount, amountWarnings(sink, amountElement?.offset ?? stmttrn.offset))
+      : undefined;
   if (cents === undefined) {
     sink.add(
       'invalid-amount',
@@ -456,6 +487,15 @@ function mapTransaction(
   // payments) and are made unique silently.
   const rawFitid = childText(stmttrn, 'FITID');
   const fitid = rawFitid !== undefined && rawFitid !== '' ? rawFitid : undefined;
+  if (fitid === undefined) {
+    // The synthesized id is deterministic, but the caller must know that no
+    // bank identifier existed (independent review finding 10).
+    sink.add(
+      'missing-fitid',
+      'Transaction has no <FITID>; a deterministic content hash was used as its id',
+      stmttrn.offset,
+    );
+  }
   const baseId = fitid ?? hashTransaction(stmttrn);
   let id = baseId;
   if (seenIds.has(baseId)) {
@@ -500,8 +540,11 @@ function mapTransaction(
     transaction.refNumber = refNumber;
   }
   // Memo enrichment: category, counterparty, installments and, for credit
-  // cards, the "purchases are debits" sign convention.
-  enrichTransaction(transaction, context.kind);
+  // cards, the "purchases are debits" sign convention. A sign rewrite keeps
+  // the emitted amount in `rawAmount` and is reported (review finding 9).
+  enrichTransaction(transaction, context.kind, (warning) => {
+    sink.add(warning.code, warning.message, stmttrn.offset);
+  });
   return transaction;
 }
 

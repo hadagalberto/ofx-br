@@ -11,6 +11,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 
+import { parseTimeZoneOffset } from '../datetime.js';
 import { OfxParseError } from '../errors.js';
 import type { Balance, OfxDocument, Statement, Transaction } from '../model.js';
 import { parseBuffer } from '../parse.js';
@@ -39,19 +40,21 @@ export interface CliArgs {
 export type CliArgsResult = { ok: true; value: CliArgs } | { ok: false; error: string };
 
 export const CLI_USAGE =
-  'usage: ofx-br <files...> [--format json|csv|ndjson] [--out file] [--strict] ' +
+  'usage: ofx-br <files...|-> [--format json|csv|ndjson] [--out file] [--strict] ' +
   '[--tz -03:00] [--merge] [--dedupe] [--quiet] [--locale pt-BR] [--delimiter ;] ' +
   '[--bom] [--help]';
 
 export const CLI_HELP = `${CLI_USAGE}
 
 Parse OFX 1.x/2.x bank and credit-card statements into a normalized model.
+Use '-' as a file name to read the document from stdin.
 
 Options:
   --format FMT   Output format: json (default), csv or ndjson.
   --out FILE     Write output to FILE instead of stdout.
   --strict       Throw on the first problem instead of collecting warnings.
-  --tz OFFSET    Default offset for dates without one (default -03:00).
+  --tz OFFSET    Default offset for dates without one (default -03:00);
+                 decimals such as +5.5 mean +05:30. Invalid values exit 2.
   --merge        Combine all files into one document and dedupe by account + FITID/hash.
   --dedupe       Drop repeated transactions by account + FITID/hash (also implied by --merge).
   --quiet        Do not print warnings to stderr.
@@ -127,6 +130,11 @@ export function parseCliArgs(argv: readonly string[]): CliArgsResult {
       args.bom = true;
       continue;
     }
+    // A lone '-' is the conventional stdin placeholder, not an option.
+    if (arg === '-') {
+      files.push(arg);
+      continue;
+    }
     if (!arg.startsWith('-')) {
       files.push(arg);
       continue;
@@ -185,6 +193,11 @@ export function parseCliArgs(argv: readonly string[]): CliArgsResult {
         ) {
           return { ok: false, error: '--tz requires a value' };
         }
+        // Reject garbage at argument-parse time: usage errors must exit 2,
+        // never silently fall back inside the parser.
+        if (parseTimeZoneOffset(raw) === undefined) {
+          return { ok: false, error: `invalid timezone '${raw}' (expected e.g. -03:00 or +5.5)` };
+        }
         args.tz = raw;
         break;
       }
@@ -234,6 +247,8 @@ export function parseCliArgs(argv: readonly string[]): CliArgsResult {
 /** Injectable I/O so the CLI logic is testable without spawning processes. */
 export interface CliIO {
   readFile(path: string): Uint8Array;
+  /** Optional so lightweight test doubles need not implement stdin. */
+  readStdin?(): Uint8Array;
   writeFile(path: string, text: string): void;
   stdout(text: string): void;
   stderr(text: string): void;
@@ -243,6 +258,7 @@ export interface CliIO {
 export function createNodeCliIO(): CliIO {
   return {
     readFile: (path) => new Uint8Array(readFileSync(path)),
+    readStdin: () => new Uint8Array(readFileSync(0)),
     writeFile: (path, text) => {
       writeFileSync(path, text, 'utf8');
     },
@@ -287,9 +303,25 @@ function accountKey(statement: Statement): string {
   ].join('|');
 }
 
-/** Raw FITID is the dedupe key; synthesized hash ids are already unique. */
+/**
+ * Dedupe key for `--dedupe`/`--merge`: account + posted date + exact amount +
+ * memo (NAME/MEMO description).
+ *
+ * A raw FITID alone is NOT a key: Brazilian exporters routinely reuse it for
+ * unrelated rows ("MERCADO -10" and "FARMACIA -99" both carrying FITID 000),
+ * and month files restart their sequences at 1, which made `--merge` drop
+ * every February row. Date + amount + memo makes genuinely identical rows
+ * collide while distinct movements survive. The description already includes
+ * the memo; keeping it here also separates same-day, same-amount purchases at
+ * different merchants.
+ */
 function transactionKey(statement: Statement, transaction: Transaction): string {
-  return `${accountKey(statement)}|${transaction.fitid ?? transaction.id}`;
+  return [
+    accountKey(statement),
+    transaction.postedAt,
+    transaction.amount.cents.toString(),
+    transaction.description,
+  ].join('|');
 }
 
 function duplicateWarning(file: string, id: string): WarningEntry {
@@ -519,7 +551,8 @@ export function runCli(argv: readonly string[], io: CliIO): number {
   for (const file of args.files) {
     let bytes: Uint8Array;
     try {
-      bytes = io.readFile(file);
+      // '-' is stdin; every other argument is a path.
+      bytes = file === '-' ? (io.readStdin?.() ?? new Uint8Array()) : io.readFile(file);
     } catch (error) {
       io.stderr(`ofx-br: cannot read '${file}': ${errorMessage(error)}\n`);
       failed = true;

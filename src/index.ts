@@ -52,7 +52,12 @@ export {
   enrichTransaction,
   extractCounterparty,
 } from './enrich.js';
-export type { ExtractCounterpartyOptions, MemoEnrichment } from './enrich.js';
+export type {
+  EnrichWarning,
+  EnrichWarningSink,
+  ExtractCounterpartyOptions,
+  MemoEnrichment,
+} from './enrich.js';
 export {
   BRAZILIAN_BANKS,
   normalizeBankId,

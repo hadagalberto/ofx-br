@@ -145,6 +145,6 @@
         ]
       }
     ],
-    "warningCodes": ["invalid-amount", "invalid-amount"]
+    "warningCodes": ["amount-ambiguous", "invalid-amount", "invalid-amount"]
   }
 }

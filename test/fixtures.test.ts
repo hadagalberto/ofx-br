@@ -81,6 +81,8 @@ function canonical(document: OfxDocument): unknown {
         type: transaction.type,
         direction: transaction.direction,
         amount: moneyView(transaction.amount),
+        rawAmount:
+          transaction.rawAmount === undefined ? undefined : moneyView(transaction.rawAmount),
         postedAt: transaction.postedAt,
         userDate: transaction.userDate,
         description: transaction.description,
@@ -102,11 +104,19 @@ const FIXTURE_FILES = readdirSync(FIXTURES_DIR)
   .sort();
 
 describe('fixture corpus — expected output', () => {
-  it('contains at least 25 synthetic OFX files, each with an expected document', () => {
+  it('contains at least 25 synthetic OFX files, each with exactly one expected document', () => {
     expect(FIXTURE_FILES.length).toBeGreaterThanOrEqual(25);
-    for (const file of FIXTURE_FILES) {
-      expect(file.endsWith('.ofx')).toBe(true);
-      expect(readExpected(file.replace(/\.ofx$/, '')).document).toBeDefined();
+    // The old `endsWith('.ofx')` assertion was a tautology over an already
+    // filtered list. Compare the two stem sets instead: this catches orphan
+    // snapshots and fixtures whose expected document is missing.
+    const expectedStems = readdirSync(FIXTURES_DIR)
+      .filter((file) => file.endsWith('.expected.json'))
+      .map((file) => file.replace(/\.expected\.json$/, ''))
+      .sort();
+    const fixtureStems = FIXTURE_FILES.map((file) => file.replace(/\.ofx$/, '')).sort();
+    expect(fixtureStems).toEqual(expectedStems);
+    for (const stem of fixtureStems) {
+      expect(readExpected(stem).document).toBeDefined();
     }
   });
 
@@ -193,7 +203,14 @@ describe('fixture corpus — known-valid and known-invalid vectors', () => {
     expect(transactions(doc)).toHaveLength(3);
     expect(transactions(doc)[2]?.id).toMatch(/^hash-[0-9a-f]{16}$/);
     expect(transactions(doc)[2]?.amount.cents).toBe(-4210n);
-    expect(doc.warnings.every((warning) => warning.code === 'unclosed-aggregate')).toBe(true);
+    // Independent review: the hash used for the FITID-less tail is now warned
+    // about; every other warning is still an unclosed aggregate.
+    expect(doc.warnings.filter((warning) => warning.code === 'missing-fitid')).toHaveLength(1);
+    expect(
+      doc.warnings
+        .filter((warning) => warning.code !== 'missing-fitid')
+        .every((warning) => warning.code === 'unclosed-aggregate'),
+    ).toBe(true);
   });
 
   it('09: duplicate FITIDs are kept and made unique deterministically', () => {
@@ -204,8 +221,13 @@ describe('fixture corpus — known-valid and known-invalid vectors', () => {
       'DUP#3',
       'hash-310efd371a1304d0',
     ]);
-    expect(doc.warnings).toHaveLength(2);
-    expect(doc.warnings.every((warning) => warning.code === 'duplicate-fitid')).toBe(true);
+    // Independent review: the FITID-less fourth row additionally reports the
+    // content-hash substitution; the old two-warning assertion was incomplete.
+    expect(doc.warnings.map((warning) => warning.code)).toEqual([
+      'duplicate-fitid',
+      'duplicate-fitid',
+      'missing-fitid',
+    ]);
   });
 
   it('10/11: empty transaction list and one-huge-line exports', () => {
@@ -287,7 +309,10 @@ describe('fixture corpus — known-valid and known-invalid vectors', () => {
       '123', // 1,2345 (half-up rounding)
     ]);
     expect(transactions(doc)).toHaveLength(10); // `N/D` and missing TRNAMT skipped
+    // "2.500" is a single separator with three digits: the documented
+    // thousands reading is kept but is now flagged as ambiguous (review).
     expect(doc.warnings.map((warning) => warning.code)).toEqual([
+      'amount-ambiguous',
       'invalid-amount',
       'invalid-amount',
     ]);

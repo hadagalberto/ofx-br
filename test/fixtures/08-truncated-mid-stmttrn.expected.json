@@ -78,7 +78,8 @@
       "unclosed-aggregate",
       "unclosed-aggregate",
       "unclosed-aggregate",
-      "unclosed-aggregate"
+      "unclosed-aggregate",
+      "missing-fitid"
     ]
   }
 }

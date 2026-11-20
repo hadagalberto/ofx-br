@@ -30,6 +30,14 @@ export interface ToCsvOptions {
   locale?: CsvLocale;
   /** Prepend a UTF-8 BOM (Excel friendliness), default `false`. */
   bom?: boolean;
+  /**
+   * Neutralize spreadsheet formula injection by prefixing a single quote to
+   * cells beginning with `=`, `+`, `-` or `@`. Genuine numeric cells (including
+   * negative amounts and pt-BR grouping) are exempt. Default `true` — Excel
+   * users are the common case, especially with `--bom`. Set `false` only for
+   * machine-to-machine CSV where the leading `'` would be unwanted.
+   */
+  escapeFormulas?: boolean;
 }
 
 /** Ordered CSV header. Stable — downstream consumers may rely on it. */
@@ -120,17 +128,35 @@ export function validateDelimiter(delimiter: string): void {
   }
 }
 
-/** RFC 4180 field quoting: quote when the value holds the delimiter, a quote or a newline. */
-function csvField(value: string, delimiter: string): string {
-  if (
-    value.includes(delimiter) ||
-    value.includes('"') ||
-    value.includes('\r') ||
-    value.includes('\n')
-  ) {
-    return `"${value.replaceAll('"', '""')}"`;
+/** Leading characters a spreadsheet would interpret as a formula. */
+const FORMULA_LEADS: ReadonlySet<string> = new Set(['=', '+', '-', '@']);
+
+/** True for real numbers (negative, decimal, grouped in either convention). */
+function isNumericCell(value: string): boolean {
+  return /^[+-]?(?:\d+(?:[.,]\d+)?|\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?)$/.test(value);
+}
+
+/** Prefixes a formula-like cell with `'`; leaves numbers and other cells alone. */
+function neutralizeFormula(value: string): string {
+  const lead = value.trimStart().charAt(0);
+  if (!FORMULA_LEADS.has(lead) || isNumericCell(value.trim())) {
+    return value;
   }
-  return value;
+  return `'${value}`;
+}
+
+/** RFC 4180 field quoting (plus optional formula neutralization). */
+function csvField(value: string, delimiter: string, escapeFormulas: boolean): string {
+  const safe = escapeFormulas ? neutralizeFormula(value) : value;
+  if (
+    safe.includes(delimiter) ||
+    safe.includes('"') ||
+    safe.includes('\r') ||
+    safe.includes('\n')
+  ) {
+    return `"${safe.replaceAll('"', '""')}"`;
+  }
+  return safe;
 }
 
 /** One transaction row, with `undefined` model fields rendered as empty cells. */
@@ -139,6 +165,7 @@ function transactionRow(
   transaction: Transaction,
   locale: CsvLocale,
   delimiter: string,
+  escapeFormulas: boolean,
 ): string {
   const amount =
     locale === 'pt-BR'
@@ -172,7 +199,7 @@ function transactionRow(
     transaction.installment?.current.toString() ?? '',
     transaction.installment?.total.toString() ?? '',
   ];
-  return fields.map((field) => csvField(field, delimiter)).join(delimiter);
+  return fields.map((field) => csvField(field, delimiter, escapeFormulas)).join(delimiter);
 }
 
 /**
@@ -189,11 +216,12 @@ export function toCsv(
   if (locale !== 'en' && locale !== 'pt-BR') {
     throw new RangeError(`invalid CSV locale ${JSON.stringify(locale)}: expected 'en' or 'pt-BR'`);
   }
+  const escapeFormulas = options.escapeFormulas ?? true;
   const rows = [CSV_COLUMNS.join(delimiter)];
   for (const document of asDocuments(input)) {
     for (const statement of document.statements) {
       for (const transaction of statement.transactions) {
-        rows.push(transactionRow(statement, transaction, locale, delimiter));
+        rows.push(transactionRow(statement, transaction, locale, delimiter, escapeFormulas));
       }
     }
   }

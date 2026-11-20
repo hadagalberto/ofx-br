@@ -357,9 +357,13 @@ describe('parse — credit-card sign normalization and installments', () => {
         '',
       ].join('\n'),
     );
-    expect(both.warnings).toEqual([]);
+    // Independent review: the card sign rewrite is now reported as an info
+    // warning; the bank row is untouched. Only the card row may warn.
+    expect(warningsOf(both).map((warning) => warning.code)).toEqual(['card-sign-normalized']);
     expect(transactionsOf(both, 0)[0]?.amount.cents).toBe(B(10000)); // bank: as emitted
+    expect(transactionsOf(both, 0)[0]?.rawAmount).toBeUndefined();
     expect(transactionsOf(both, 1)[0]?.amount.cents).toBe(B(-10000)); // card: purchases are debits
+    expect(transactionsOf(both, 1)[0]?.rawAmount?.cents).toBe(B(10000));
   });
 });
 
@@ -389,7 +393,13 @@ describe('parse — ids stay unique and deterministic with enrichment', () => {
     expect(ids.slice(0, 2)).toEqual(['dup', 'dup#2']);
     expect(ids[2]).toMatch(/^hash-[0-9a-f]{16}$/);
     expect(ids[3]).toBe(`${ids[2]}#2`); // identical fitid-less rows stay separate, silently
-    expect(warningsOf(doc).map((w) => w.code)).toEqual(['duplicate-fitid']);
+    // Independent review: the two fitid-less rows now report that a content
+    // hash stood in for a FITID; the old single-code assertion encoded silence.
+    expect(warningsOf(doc).map((w) => w.code)).toEqual([
+      'duplicate-fitid',
+      'missing-fitid',
+      'missing-fitid',
+    ]);
     // Enrichment applies to deduped rows too.
     expect(transactionsOf(doc)[1]?.counterparty).toEqual({ name: 'BELTRANO' });
   });
@@ -443,7 +453,8 @@ describe('parse — verifyBalance option', () => {
     ];
     const doc = parse(`${MIN_HEADER}${cardBody(cardBlocks, '1362.10')}`, { verifyBalance: true });
     expect(transactionsOf(doc).map((t) => t.amount.cents)).toEqual([B(-13790), B(150000)]);
-    expect(doc.warnings).toEqual([]); // -137.90 + 1500.00 = 1362.10 ✓
+    // -137.90 + 1500.00 = 1362.10 ✓; the sign rewrite itself is reported.
+    expect(warningsOf(doc).map((warning) => warning.code)).toEqual(['card-sign-normalized']);
   });
 
   it('does not check statements without a parsable ledger balance', () => {
