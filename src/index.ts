@@ -17,6 +17,14 @@ export type {
   ParseHeaderOptions,
   XmlPrologInfo,
 } from './header.js';
+export { parseSgml } from './sgml/tree.js';
+export type {
+  SgmlElement,
+  SgmlFlavor,
+  SgmlParseOptions,
+  SgmlParseResult,
+  SgmlWarningCode,
+} from './sgml/tree.js';
 export { OfxParseError } from './errors.js';
 export type { OfxParseErrorOptions } from './errors.js';
 export type { ParseWarning } from './types.js';
