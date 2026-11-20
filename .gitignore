@@ -1,0 +1,9 @@
+node_modules/
+bin/
+obj/
+dist/
+coverage/
+*.user
+.vs/
+BenchmarkDotNet.Artifacts/
+TestResults/
