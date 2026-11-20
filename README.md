@@ -6,9 +6,14 @@ JSON model. Built for the broken files real banks export — never crash, always
 report what was fixed. MIT licensed. See [`SPEC.md`](./SPEC.md) for the full plan.
 
 > **Status (v0.1.0):** encoding detection & decoding, mojibake repair, OFX
-> 1.x/2.x header parsing and the lenient SGML/XML body tokenizer + tree
-> builder are implemented and fully tested. Statement-model mapping,
-> Brazilian normalization (amounts/dates/bank names/Pix), CSV export and the
+> 1.x/2.x header parsing, the lenient SGML/XML body tokenizer + tree builder
+> and the full mapping to the normalized model are implemented and fully
+> tested — `parse`/`parseBuffer` deliver sign-on, bank and credit-card
+> statements (several per file), balances and transactions, with exact
+> bigint-cent amounts, ISO 8601 dates (BRT default, `tz` option), bank-name
+> resolution from an embedded 65-institution COMPE/ISPB table and
+> deterministic ids for duplicated/missing FITIDs. Memo enrichment
+> (Pix/TED/DOC categories, counterparties, installments), CSV export and the
 > full CLI surface are upcoming milestones.
 
 ## Install
@@ -61,6 +66,54 @@ parseSgml(text: string, opts?: {
 }): SgmlParseResult
 // { root: { name: '#document', children: [ { name: 'OFX', children: [...] } ] },
 //   warnings: [{ code: 'unclosed-aggregate', line: 12, column: 3, ... }] }
+
+// 5. The whole pipeline → the normalized model: sign-on, statements, balances,
+//    transactions. Same leniency contract, same warning codes + locations.
+parse(text: string, opts?: { strict?: boolean; tz?: string; encoding?: string }): OfxDocument
+parseBuffer(bytes: Uint8Array, opts?: { strict?: boolean; tz?: string }): OfxDocument
+// { header: { OFXHEADER: '100', ... }, version: '1', encoding: 'utf-8',
+//   signOn: { statusCode: 0, severity: 'INFO', serverDate: '2024-01-15T12:00:00-03:00',
+//             org: 'ITAU UNIBANCO HOLDING', fid: '0010' },
+//   statements: [{
+//     kind: 'bank', currency: 'BRL',
+//     account: { bankId: '341', bankName: 'ITAÚ UNIBANCO S.A.', branchId: '1234',
+//                accountId: '999999999999', accountType: 'CHECKING' },
+//     period: { start: '2024-01-01', end: '2024-01-31' },
+//     ledgerBalance: { amount: { cents: 123456n, currency: 'BRL' }, date: '2024-01-31' },
+//     transactions: [{
+//       id: '20240105001', fitid: '20240105001', type: 'DEBIT', direction: 'debit',
+//       amount: { cents: -8990n, currency: 'BRL' },
+//       postedAt: '2024-01-05T12:00:00-03:00',
+//       description: 'PAGAMENTO BOLETO COMPANHIA ENERGETICA', ...
+//     }] }],
+//   warnings: [...] }
+//
+// - `tz` applies to date/time values without an `[offset]` suffix
+//   (default `'-03:00'`, BRT — Brazil has had no DST since 2019).
+// - duplicate FITIDs inside one statement keep both rows with ids
+//   `fitid`, `fitid#2`, … (warned); a missing FITID gets a deterministic
+//   `hash-<16 hex>` id.
+// - unparsable amounts skip the transaction with an `invalid-amount`
+//   warning; invalid dates clamp best-effort (`20240230` → `2024-02-29`)
+//   and are never NaN.
+
+// 6. Amounts, dates and the bank table, exported individually.
+parseAmountToCents(raw: string): bigint | undefined
+// '-1234.56', '-1234,56', '1.234,56', '1,234.56', '+10', '2.500' (group),
+// 'R$ 1.234,56' → exact cents; ambiguity per SPEC: last separator + digit count.
+formatMoney({ cents, currency }): string   // pt-BR: '-R$ 1.234,56'
+formatOfxAmount({ cents, currency }): string // canonical: '-1234.56'
+moneyToNumber({ cents, currency }): number
+parseOfxDateTime(raw: string, defaultOffsetMinutes?): OfxDateTimeResult
+// '20240115', '20240115120000[-3:BRT]', '[-03:EST]', '[0:GMT]', '[+05:30]',
+// '.123' → ISO 8601; clamps invalid fields with a warning, never NaN.
+resolveBank(bankId: string): BrazilianBank | undefined
+resolveBankByCompe(code: string): BrazilianBank | undefined   // '341', '41' → zero-padded COMPE
+resolveBankByIspb(ispb: string): BrazilianBank | undefined    // '60701190'
+normalizeBankId(bankId: string): string                       // '41' → '041'
+BRAZILIAN_BANKS: readonly BrazilianBank[] // 65 institutions, COMPE + ISPB + names,
+                                         // sourced from the Banco Central do Brasil
+                                         // STR/COMPE participants list (see src/banks.ts)
 ```
 
 Encoding detection order: BOM → NUL-interleaved UTF-16 pattern → OFX header
@@ -75,6 +128,18 @@ elements (repeated unclosed `<STMTTRN>` become siblings), and every repair
 carries a stable warning code with a 1-based line/column. In `strict` mode
 the first problem throws `OfxParseError` with the same code and location.
 Property tests guarantee lenient parsing never throws on arbitrary input.
+
+Amounts parse to exact bigint cents (no float is ever involved) from every
+convention Brazilian exports mix — `-1234.56`, `-1234,56`, `1.234,56`,
+`1,234.56`, `+10`, grouped thousands, `R$` prefixes, stray and NBSP spaces —
+with the ambiguity rule from the SPEC (last separator + digit count) and
+round-half-away-from-zero beyond two decimals. Dates parse to ISO 8601 with
+the `[-3:BRT]`-style offsets real banks emit and a configurable `-03:00`
+default; invalid dates clamp best-effort and never produce NaN. `BANKID`
+values resolve against the embedded 65-institution Banco Central table
+(COMPE + ISPB + names), zero-padding 1–3-digit codes and falling back to
+ISPB for 8-digit ones. The performance guard maps 100k transactions through
+the whole pipeline in well under 2 s.
 
 ## Development
 

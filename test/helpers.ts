@@ -94,6 +94,21 @@ export function concatBytes(...parts: readonly Uint8Array[]): Uint8Array {
   return out;
 }
 
+/**
+ * True when Vitest runs with coverage instrumentation. Instrumented timing
+ * measures the profiler (a 2-4× slowdown), so performance tests relax their
+ * bound here and keep the strict bound for plain runs.
+ */
+export function isCoverageRun(): boolean {
+  interface VitestWorkerLike {
+    config?: { coverage?: { enabled?: boolean } };
+  }
+  const globalWithWorker = globalThis as typeof globalThis & {
+    __vitest_worker__?: VitestWorkerLike;
+  };
+  return globalWithWorker.__vitest_worker__?.config?.coverage?.enabled === true;
+}
+
 /** Canonical OFX 1.x header, Itaú-style (the most common Brazilian shape). */
 export const OFX1_HEADER_1252 = [
   'OFXHEADER:100',
