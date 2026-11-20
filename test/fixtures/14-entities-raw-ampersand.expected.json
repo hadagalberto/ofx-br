@@ -1,0 +1,115 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "444555666777",
+          "bankId": "341",
+          "bankName": "ITAÚ UNIBANCO S.A."
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "EN-1",
+            "fitid": "EN-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T09:00:00-03:00",
+            "description": "MERCADO MERCADO & CIA LTDA",
+            "name": "MERCADO",
+            "memo": "MERCADO & CIA LTDA"
+          },
+          {
+            "id": "EN-2",
+            "fitid": "EN-2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-2000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-06T10:00:00-03:00",
+            "description": "AVISO ATENCAO <VALOR> LIMITE 100",
+            "name": "AVISO",
+            "memo": "ATENCAO <VALOR> LIMITE 100"
+          },
+          {
+            "id": "EN-3",
+            "fitid": "EN-3",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "3000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-07T11:00:00-03:00",
+            "description": "CODIGO LETRAS ABC FINAL",
+            "name": "CODIGO",
+            "memo": "LETRAS ABC FINAL"
+          },
+          {
+            "id": "EN-4",
+            "fitid": "EN-4",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-4000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-08T12:00:00-03:00",
+            "description": "LANCHE BAR & LANCHONETE EXPRESS",
+            "name": "LANCHE",
+            "memo": "BAR & LANCHONETE EXPRESS"
+          },
+          {
+            "id": "EN-5",
+            "fitid": "EN-5",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-5000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-09T13:00:00-03:00",
+            "description": "PENDENCIA PAGAMENTO &foo; PENDENTE",
+            "name": "PENDENCIA",
+            "memo": "PAGAMENTO &foo; PENDENTE"
+          },
+          {
+            "id": "EN-6",
+            "fitid": "EN-6",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "6000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T14:00:00-03:00",
+            "description": "ESPACO TARIFA MENSAL",
+            "name": "ESPACO",
+            "memo": "TARIFA MENSAL",
+            "category": "tarifa"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["unknown-entity"]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "DATA": "OFXSGML",
+      "VERSION": "102",
+      "SECURITY": "NONE",
+      "ENCODING": "USASCII",
+      "CHARSET": "1252",
+      "COMPRESSION": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "1",
+    "encoding": "windows-1252",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "2222333344445555",
+          "bankId": "041",
+          "bankName": "BCO DO ESTADO DO RS S.A.",
+          "branchId": "0199",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-15"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "18500",
+            "currency": "BRL"
+          },
+          "date": "2024-01-15"
+        },
+        "transactions": [
+          {
+            "id": "R-1",
+            "fitid": "R-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1500",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T08:00:00-03:00",
+            "description": "TARIFA TARIFA CONTA",
+            "name": "TARIFA",
+            "memo": "TARIFA CONTA",
+            "category": "tarifa"
+          },
+          {
+            "id": "R-3",
+            "fitid": "R-3",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "20000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T10:00:00-03:00",
+            "description": "DEPOSITO DEPOSITO CHEQUE",
+            "name": "DEPOSITO",
+            "memo": "DEPOSITO CHEQUE"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["invalid-amount"]
+  }
+}

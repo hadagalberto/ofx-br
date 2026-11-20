@@ -1,0 +1,59 @@
+{
+  "options": {
+    "tz": "+02:00"
+  },
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "555666777888",
+          "bankId": "077",
+          "bankName": "BANCO INTER"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "TZ-1",
+            "fitid": "TZ-1",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T09:00:00+02:00",
+            "description": "PIX RECEBIDO",
+            "memo": "PIX RECEBIDO",
+            "category": "pix"
+          },
+          {
+            "id": "TZ-2",
+            "fitid": "TZ-2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-200",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T12:00:00+02:00",
+            "description": "PAGAMENTO",
+            "memo": "PAGAMENTO"
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

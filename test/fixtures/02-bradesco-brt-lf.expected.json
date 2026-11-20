@@ -1,0 +1,122 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "DATA": "OFXSGML",
+      "VERSION": "102",
+      "SECURITY": "NONE",
+      "ENCODING": "USASCII",
+      "CHARSET": "1252",
+      "COMPRESSION": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "1",
+    "encoding": "windows-1252",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-02-01T12:00:00-03:00",
+      "org": "BRADECO",
+      "fid": "237"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "00012345-6",
+          "bankId": "237",
+          "bankName": "BCO BRADESCO S.A.",
+          "branchId": "1234",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-02-01",
+          "end": "2024-02-29"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "890054",
+            "currency": "BRL"
+          },
+          "date": "2024-02-29"
+        },
+        "availableBalance": {
+          "amount": {
+            "cents": "870054",
+            "currency": "BRL"
+          },
+          "date": "2024-02-29"
+        },
+        "transactions": [
+          {
+            "id": "B-0001",
+            "fitid": "B-0001",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-250000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-02-01T10:00:00-03:00",
+            "description": "DOC DOC PARA CONTA EM OUTRO BANCO",
+            "name": "DOC",
+            "memo": "DOC PARA CONTA EM OUTRO BANCO",
+            "category": "doc",
+            "counterparty": {
+              "name": "OUTRO BANCO"
+            }
+          },
+          {
+            "id": "B-0002",
+            "fitid": "B-0002",
+            "type": "CHECK",
+            "direction": "debit",
+            "amount": {
+              "cents": "-10000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-02-05",
+            "description": "CHEQUE CHEQUE NUMERO 000123",
+            "name": "CHEQUE",
+            "memo": "CHEQUE NUMERO 000123",
+            "checkNumber": "000123"
+          },
+          {
+            "id": "B-0003",
+            "fitid": "B-0003",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-4590",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-02-10T09:00:00-03:00",
+            "description": "TARIFA TARIFA MANUTENCAO CONTA",
+            "name": "TARIFA",
+            "memo": "TARIFA MANUTENCAO CONTA",
+            "category": "tarifa"
+          },
+          {
+            "id": "B-0004",
+            "fitid": "B-0004",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "1234",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-02-28T17:00:00-03:00",
+            "description": "JUROS JUROS CREDITADOS",
+            "name": "JUROS",
+            "memo": "JUROS CREDITADOS",
+            "category": "juros"
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

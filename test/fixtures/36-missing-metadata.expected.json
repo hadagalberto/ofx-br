@@ -1,0 +1,49 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "ERROR",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "XXX",
+        "account": {
+          "accountId": "",
+          "bankId": "260",
+          "bankName": "NU PAGAMENTOS - IP",
+          "branchId": "0001"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "BM-1",
+            "fitid": "BM-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-321",
+              "currency": "XXX"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PAGAMENTO",
+            "memo": "PAGAMENTO"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["invalid-status-code", "missing-currency", "missing-account-id"]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "987654321-0",
+          "bankId": "237",
+          "bankName": "BCO BRADESCO S.A."
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "DC-1",
+            "fitid": "DC-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1100",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "DC-2",
+            "fitid": "DC-2",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "2200",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-06",
+            "description": ""
+          }
+        ]
+      }
+    ],
+    "warningCodes": [
+      "duplicate-close-tag",
+      "duplicate-close-tag",
+      "duplicate-close-tag",
+      "duplicate-close-tag",
+      "duplicate-close-tag"
+    ]
+  }
+}

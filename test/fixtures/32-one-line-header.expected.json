@@ -1,0 +1,57 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "DATA": "OFXSGML",
+      "VERSION": "102",
+      "SECURITY": "NONE",
+      "ENCODING": "USASCII",
+      "CHARSET": "1252",
+      "COMPRESSION": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "1",
+    "encoding": "windows-1252",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "6543219870-9",
+          "bankId": "341",
+          "bankName": "ITAÚ UNIBANCO S.A."
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "111111",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "OH-1",
+            "fitid": "OH-1",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "111111",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "DEPOSITO DEPOSITO IDENTIFICADO",
+            "name": "DEPOSITO",
+            "memo": "DEPOSITO IDENTIFICADO"
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

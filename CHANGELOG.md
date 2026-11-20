@@ -99,6 +99,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   strings, arbitrary 16-bit code-unit sequences and arbitrary bytes never
   throw; random well-formed documents round-trip exactly with zero warnings.
 - Performance guard: 100k transactions parse in well under 2 s.
+- Fixture corpus: 38 synthetic OFX files in `test/fixtures/` (fake data only;
+  CPF/CNPJ check digits generated and validated by `generate.mjs`), each with
+  a complete `.expected.json` document and explicit known-valid/known-invalid
+  vector assertions covering every quirk in SPEC.md. `test/fixtures/README.md`
+  maps each file to the quirk it models.
+
+### Fixed
+
+- Counterparty extraction no longer mistakes `PARC 02/10`/`PARC12/48`
+  installment fragments, numeric fragments (`NUMERO 12345 …`) or the
+  `PAGAMENTO FATURA` bill-payment label for a person or merchant.
+- Credit-card direction now follows the detected intent even when the amount
+  already has the right sign: a refund mislabelled `TRNTYPE>DEBIT` is a
+  `credit`, not a debit.
 
 ## [0.1.0] - 2026-11-20
 

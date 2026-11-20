@@ -1,0 +1,82 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "DATA": "OFXSGML",
+      "VERSION": "102",
+      "SECURITY": "NONE",
+      "ENCODING": "USASCII",
+      "CHARSET": "1252",
+      "COMPRESSION": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "1",
+    "encoding": "windows-1252",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "555666777888",
+          "bankId": "197",
+          "bankName": "STONE IP S.A.",
+          "branchId": "0001",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "238010",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "ST-1",
+            "fitid": "ST-1",
+            "type": "debit",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1990",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T10:30:00-03:00",
+            "description": "PAGAMENTO PAGAMENTO CONTA AGUA",
+            "name": "PAGAMENTO",
+            "memo": "PAGAMENTO CONTA AGUA"
+          },
+          {
+            "id": "ST-2",
+            "fitid": "ST-2",
+            "type": "credit",
+            "direction": "credit",
+            "amount": {
+              "cents": "240000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10",
+            "description": "RECEBIMENTO DEPOSITO VIA BOLETO BANCARIO",
+            "name": "RECEBIMENTO",
+            "memo": "DEPOSITO VIA BOLETO BANCARIO",
+            "category": "boleto",
+            "counterparty": {
+              "name": "BANCARIO"
+            }
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

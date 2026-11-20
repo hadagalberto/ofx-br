@@ -1,0 +1,85 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "901234567890",
+          "bankId": "336",
+          "bankName": "BCO C6 S.A."
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "MF-1",
+            "fitid": "MF-1",
+            "type": "",
+            "direction": "debit",
+            "amount": {
+              "cents": "-500",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "MF-2",
+            "fitid": "MF-2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-600",
+              "currency": "BRL"
+            },
+            "postedAt": "",
+            "description": "PAGAMENTO",
+            "memo": "PAGAMENTO"
+          },
+          {
+            "id": "MF-3",
+            "fitid": "MF-3",
+            "type": "XFER",
+            "direction": "credit",
+            "amount": {
+              "cents": "70000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-07",
+            "description": "TRANSFERENCIA TRANSF RECEBIDA",
+            "name": "TRANSFERENCIA",
+            "memo": "TRANSF RECEBIDA",
+            "category": "transfer"
+          },
+          {
+            "id": "MF-4",
+            "fitid": "MF-4",
+            "type": "XFER",
+            "direction": "debit",
+            "amount": {
+              "cents": "-80000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-08",
+            "description": "TRANSFERENCIA TRANSF ENVIADA",
+            "name": "TRANSFERENCIA",
+            "memo": "TRANSF ENVIADA",
+            "category": "transfer"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["missing-trntype", "missing-dtposted"]
+  }
+}

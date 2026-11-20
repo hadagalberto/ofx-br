@@ -1,0 +1,239 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "666555444333222",
+          "bankId": "077",
+          "bankName": "BANCO INTER"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "P1",
+            "fitid": "P1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PIX ENVIADO - MARIA APARECIDA SOUZA CPF 123.456.789-09",
+            "memo": "PIX ENVIADO - MARIA APARECIDA SOUZA CPF 123.456.789-09",
+            "category": "pix",
+            "counterparty": {
+              "name": "MARIA APARECIDA SOUZA",
+              "document": "123.456.789-09"
+            }
+          },
+          {
+            "id": "P2",
+            "fitid": "P2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PIX RECEBIDO DE JOSE CARLOS OLIVEIRA CPF ***.238.624-**",
+            "memo": "PIX RECEBIDO DE JOSE CARLOS OLIVEIRA CPF ***.238.624-**",
+            "category": "pix",
+            "counterparty": {
+              "name": "JOSE CARLOS OLIVEIRA",
+              "document": "***.238.624-**"
+            }
+          },
+          {
+            "id": "P3",
+            "fitid": "P3",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PIX ENVIADO CPF 52998224725",
+            "memo": "PIX ENVIADO CPF 52998224725",
+            "category": "pix",
+            "counterparty": {
+              "document": "52998224725"
+            }
+          },
+          {
+            "id": "P4",
+            "fitid": "P4",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "TED PARA MERCADINHO VIZINHO LTDA CNPJ 11.222.333/0001-81",
+            "memo": "TED PARA MERCADINHO VIZINHO LTDA CNPJ 11.222.333/0001-81",
+            "category": "ted",
+            "counterparty": {
+              "name": "MERCADINHO VIZINHO LTDA",
+              "document": "11.222.333/0001-81"
+            }
+          },
+          {
+            "id": "P5",
+            "fitid": "P5",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "DOC RECEBIDO DE FARMACIA SAO JOAO",
+            "memo": "DOC RECEBIDO DE FARMACIA SAO JOAO",
+            "category": "doc",
+            "counterparty": {
+              "name": "FARMACIA SAO JOAO"
+            }
+          },
+          {
+            "id": "P6",
+            "fitid": "P6",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "BOLETO PAGO COMPANHIA DE GAS",
+            "memo": "BOLETO PAGO COMPANHIA DE GAS",
+            "category": "boleto",
+            "counterparty": {
+              "name": "COMPANHIA DE GAS"
+            }
+          },
+          {
+            "id": "P7",
+            "fitid": "P7",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "TARIFA MANUTENCAO CONTA",
+            "memo": "TARIFA MANUTENCAO CONTA",
+            "category": "tarifa"
+          },
+          {
+            "id": "P8",
+            "fitid": "P8",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "IOF COMPRA INTERNACIONAL",
+            "memo": "IOF COMPRA INTERNACIONAL",
+            "category": "iof"
+          },
+          {
+            "id": "P9",
+            "fitid": "P9",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "JUROS CREDITADOS MES",
+            "memo": "JUROS CREDITADOS MES",
+            "category": "juros"
+          },
+          {
+            "id": "P10",
+            "fitid": "P10",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "ESTORNO COMPRA CARTAO",
+            "memo": "ESTORNO COMPRA CARTAO",
+            "category": "estorno"
+          },
+          {
+            "id": "P11",
+            "fitid": "P11",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "SAQUE CAIXA ELETRONICO",
+            "memo": "SAQUE CAIXA ELETRONICO",
+            "category": "saque"
+          },
+          {
+            "id": "P12",
+            "fitid": "P12",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "TRANSFERENCIA ENVIADA - ALUGUEL APARTAMENTO",
+            "memo": "TRANSFERENCIA ENVIADA - ALUGUEL APARTAMENTO",
+            "category": "transfer",
+            "counterparty": {
+              "name": "ALUGUEL APARTAMENTO"
+            }
+          },
+          {
+            "id": "P13",
+            "fitid": "P13",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "COMPRA CARTAO DEBITO MERCADO BAIRRO",
+            "memo": "COMPRA CARTAO DEBITO MERCADO BAIRRO",
+            "category": "card-purchase",
+            "counterparty": {
+              "name": "MERCADO BAIRRO"
+            }
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

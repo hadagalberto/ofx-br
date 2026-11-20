@@ -1,0 +1,136 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "1111-22222-3",
+          "bankId": "001",
+          "bankName": "BCO DO BRASIL S.A.",
+          "branchId": "1234",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-15"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "99000",
+            "currency": "BRL"
+          },
+          "date": "2024-01-15"
+        },
+        "transactions": [
+          {
+            "id": "tx-1",
+            "fitid": "tx-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-02",
+            "description": "PIX PIX ENVIADO - ANA BEATRIZ LOPES",
+            "name": "PIX",
+            "memo": "PIX ENVIADO - ANA BEATRIZ LOPES",
+            "category": "pix",
+            "counterparty": {
+              "name": "ANA BEATRIZ LOPES"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "3333-44444-5",
+          "bankId": "001",
+          "bankName": "BCO DO BRASIL S.A.",
+          "branchId": "1234",
+          "accountType": "SAVINGS"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-15"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "50000",
+            "currency": "BRL"
+          },
+          "date": "2024-01-15"
+        },
+        "transactions": [
+          {
+            "id": "tx-1",
+            "fitid": "tx-1",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "50000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "DEPOSITO DEPOSITO POUPANCA",
+            "name": "DEPOSITO",
+            "memo": "DEPOSITO POUPANCA"
+          }
+        ]
+      },
+      {
+        "kind": "creditcard",
+        "currency": "BRL",
+        "account": {
+          "accountId": "4111********7777"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-15"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "-4990",
+            "currency": "BRL"
+          },
+          "date": "2024-01-15"
+        },
+        "transactions": [
+          {
+            "id": "cc-1",
+            "fitid": "cc-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-4990",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10",
+            "description": "NETFLIX BRASIL",
+            "name": "NETFLIX BRASIL",
+            "counterparty": {
+              "name": "NETFLIX BRASIL"
+            }
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

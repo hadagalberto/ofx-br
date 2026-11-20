@@ -1,0 +1,125 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "DATA": "OFXSGML",
+      "VERSION": "102",
+      "SECURITY": "NONE",
+      "ENCODING": "USASCII",
+      "CHARSET": "1252",
+      "COMPRESSION": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "1",
+    "encoding": "windows-1252",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00",
+      "org": "ITAU UNIBANCO",
+      "fid": "341"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "999999999999",
+          "bankId": "341",
+          "bankName": "ITAÚ UNIBANCO S.A.",
+          "branchId": "1234",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "123456",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "availableBalance": {
+          "amount": {
+            "cents": "120056",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "2024010500001",
+            "fitid": "2024010500001",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-8990",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T08:30:00-03:00",
+            "description": "PAGAMENTO BOLETO COMPANHIA ENERGÉTICA & FILHOS LTDA",
+            "name": "PAGAMENTO BOLETO",
+            "memo": "COMPANHIA ENERGÉTICA & FILHOS LTDA",
+            "category": "boleto",
+            "counterparty": {
+              "name": "COMPANHIA ENERGÉTICA & FILHOS LTDA"
+            }
+          },
+          {
+            "id": "2024011000001",
+            "fitid": "2024011000001",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "350000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T07:00:00-03:00",
+            "description": "CREDITO SALARIO SALÁRIO REFERENTE JANEIRO/2024",
+            "name": "CREDITO SALARIO",
+            "memo": "SALÁRIO REFERENTE JANEIRO/2024"
+          },
+          {
+            "id": "2024012000001",
+            "fitid": "2024012000001",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-3490",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-20T10:15:00-03:00",
+            "description": "TARIFA TARIFAÇÃO <MANUTENÇÃO> CONTA",
+            "name": "TARIFA",
+            "memo": "TARIFAÇÃO <MANUTENÇÃO> CONTA",
+            "category": "tarifa"
+          },
+          {
+            "id": "2024012500001",
+            "fitid": "2024012500001",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-15000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-25T14:30:00-03:00",
+            "description": "PIX PIX ENVIADO - MARIA APARECIDA SOUZA CPF ***.123.456-**",
+            "name": "PIX",
+            "memo": "PIX ENVIADO - MARIA APARECIDA SOUZA CPF ***.123.456-**",
+            "category": "pix",
+            "counterparty": {
+              "name": "MARIA APARECIDA SOUZA",
+              "document": "***.123.456-**"
+            }
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

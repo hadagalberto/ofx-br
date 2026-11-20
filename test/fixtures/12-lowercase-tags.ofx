@@ -1,0 +1,20 @@
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<ofx>
+<signonmsgsrsv1><sonrs><status><code>0</code><severity>INFO</severity></status><dtserver>20240115120000[-3:BRT]</dtserver></sonrs></signonmsgsrsv1>
+<bankmsgsrsv1><stmttrnrs><trnuid>5</trnuid><status><code>0</code><severity>INFO</severity></status>
+<stmtrs><curdef>BRL</curdef>
+<bankacctfrom><bankid>197</bankid><branchid>0001</branchid><acctid>555666777888</acctid><accttype>CHECKING</accttype></bankacctfrom>
+<banktranlist><dtstart>20240101</dtstart><dtend>20240131</dtend>
+<stmttrn><trntype>debit</trntype><dtposted>20240105103000[-3:BRT]</dtposted><trnamt>-19.90</trnamt><fitid>ST-1</fitid><name>PAGAMENTO</name><memo>PAGAMENTO CONTA AGUA</memo></stmttrn>
+<stmttrn><trntype>credit</trntype><dtposted>20240110</dtposted><trnamt>2400,00</trnamt><fitid>ST-2</fitid><name>RECEBIMENTO</name><memo>DEPOSITO VIA BOLETO BANCARIO</memo></stmttrn>
+</banktranlist><ledgerbal><balamt>2380,10</balamt><dtasof>20240131</dtasof></ledgerbal>
+</stmtrs></stmttrnrs></bankmsgsrsv1></ofx>

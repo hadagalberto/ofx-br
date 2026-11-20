@@ -1,0 +1,49 @@
+{
+  "options": {},
+  "document": {
+    "header": {},
+    "version": "unknown",
+    "encoding": "utf-8",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "1234-5",
+          "bankId": "260",
+          "bankName": "NU PAGAMENTOS - IP"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "NH-1",
+            "fitid": "NH-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-100",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PIX PIX ENVIADO - TESTE DE SOBRENOME",
+            "name": "PIX",
+            "memo": "PIX ENVIADO - TESTE DE SOBRENOME",
+            "category": "pix",
+            "counterparty": {
+              "name": "TESTE DE SOBRENOME"
+            }
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["missing-header"]
+  }
+}

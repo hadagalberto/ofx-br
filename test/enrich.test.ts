@@ -179,6 +179,9 @@ describe('extractCounterparty', () => {
     expect(
       extractCounterparty('PAGAMENTO RECEBIDO', { name: 'Pagamento recebido', kind: 'creditcard' }),
     ).toBeUndefined();
+    expect(
+      extractCounterparty('PAGAMENTO DE FATURA', { name: 'PAGAMENTO FATURA', kind: 'creditcard' }),
+    ).toBeUndefined(); // a bill-payment label is not a merchant
     // Bank statements never fall back to NAME
     expect(
       extractCounterparty('Compra cartão', { name: 'MERCADO LIVRE', kind: 'bank' }),
@@ -199,6 +202,8 @@ describe('extractCounterparty', () => {
     ['PIX RECEBIDO 123.456.789-012', 'a digit glued after the token is not a CPF'],
     ['PIX RECEBIDO VIA APP', 'trailing channel labels are not names'],
     ['COMPRA CARTAO & PIX 0', 'noise is not a name'],
+    ['COMPRA ONLINE PARC12/48', 'installments are metadata, not merchants'],
+    ['PAGAMENTO BOLETO NUMERO 12345 ESTORNO TARIFA BANCARIA', 'numeric fragments are not names'],
     ['SALARIO MAIO', 'nothing to extract'],
     ['', 'empty memo'],
   ])('%s → undefined (%s)', (memo) => {
@@ -302,6 +307,14 @@ describe('enrichTransaction — credit-card sign normalization', () => {
     enrichTransaction(before, 'creditcard');
     expect(before.amount.cents).toBe(BigInt(fields.cents));
     expect(before.direction).toBe(fields.cents < 0 ? 'debit' : 'credit');
+  });
+
+  it('normalizes direction for a refund mislabelled as a debit', () => {
+    const refund = tx({ type: 'DEBIT', cents: 2500, description: 'ESTORNO COMPRA CARTAO' });
+    enrichTransaction(refund, 'creditcard');
+    expect(refund.amount.cents).toBe(2500n); // already positive: no sign flip needed
+    expect(refund.direction).toBe('credit'); // but the intent is a refund
+    expect(refund.category).toBe('estorno');
   });
 
   it('never rewrites bank-statement amounts', () => {

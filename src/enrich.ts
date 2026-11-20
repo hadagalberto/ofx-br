@@ -312,6 +312,8 @@ const LEADING_NOISE = new Set([
   'transf',
   'pagamento',
   'pgto',
+  'fatura',
+  'faturas',
   'debito',
   'credito',
   'online',
@@ -416,6 +418,9 @@ function cleanCandidate(raw: string): string | undefined {
   if (folded.startsWith('r$')) {
     return undefined; // leftover amount ("PIX ENVIADO R$ 100,00 …")
   }
+  if (/\d{4,}/.test(folded)) {
+    return undefined; // an account/number fragment, not a name ("NUMERO 12345 …")
+  }
   const first = folded.charCodeAt(0);
   if (first < 0x61 || first > 0x7a) {
     return undefined; // must start with a letter (names and merchants do)
@@ -428,6 +433,7 @@ function nameFromPrefixes(
   description: string,
   folded: string,
   document: DocumentMatch | undefined,
+  installmentAt: number | undefined,
 ): string | undefined {
   for (const prefix of COUNTERPARTY_PREFIXES) {
     const matches = [...folded.matchAll(prefix)];
@@ -438,7 +444,12 @@ function nameFromPrefixes(
       }
       const end = match.index + match[0].length;
       const hasDocAhead = document !== undefined && document.start > end;
-      const cut = hasDocAhead ? document.start : folded.length;
+      // Never let an installment fragment ("PARC 02/10", "PARC12/48") leak
+      // into a counterparty name — it is metadata, not a person or merchant.
+      const cut = Math.min(
+        hasDocAhead ? document.start : folded.length,
+        installmentAt ?? folded.length,
+      );
       let tail = folded.slice(end, cut);
       if (hasDocAhead) {
         tail = tail.replace(DOC_TAIL_RE, '');
@@ -471,14 +482,20 @@ function counterpartyOf(
     folded.includes('.') || folded.includes('cpf') || folded.includes('cnpj')
       ? findDocument(folded)
       : undefined;
+  const installmentAt = INSTALLMENT_RE.exec(folded)?.index;
   let counterpartyName: string | undefined;
   if (hasCounterpartyKeyword(folded)) {
-    counterpartyName = nameFromPrefixes(description, folded, document);
+    counterpartyName = nameFromPrefixes(description, folded, document, installmentAt);
   }
   if (counterpartyName === undefined && kind === 'creditcard' && name !== undefined) {
     // Card statements carry the operation label in MEMO and the merchant in
-    // NAME ("Compra cartão" + "PADARIA PÃO DOCE LTDA").
-    counterpartyName = cleanCandidate(name);
+    // NAME ("Compra cartão" + "PADARIA PÃO DOCE LTDA"). Installment suffixes
+    // sometimes pasted into NAME are metadata, not part of the merchant name.
+    const nameFolded = foldPtBr(name);
+    const nameInstallmentAt = INSTALLMENT_RE.exec(nameFolded)?.index;
+    counterpartyName = cleanCandidate(
+      nameInstallmentAt === undefined ? name : name.slice(0, nameInstallmentAt),
+    );
   }
   if (counterpartyName === undefined && document === undefined) {
     return undefined;
@@ -597,9 +614,10 @@ function normalizeCardSign(transaction: Transaction): void {
   const cents = transaction.amount.cents;
   if (intent === 'debit' && cents > 0n) {
     transaction.amount = { cents: -cents, currency: transaction.amount.currency };
-    transaction.direction = 'debit';
   } else if (intent === 'credit' && cents < 0n) {
     transaction.amount = { cents: -cents, currency: transaction.amount.currency };
-    transaction.direction = 'credit';
   }
+  // The direction follows the detected intent even when the amount already
+  // had the right sign (e.g. a refund mislabelled `TRNTYPE>DEBIT`).
+  transaction.direction = intent;
 }

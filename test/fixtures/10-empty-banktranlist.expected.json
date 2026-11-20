@@ -1,0 +1,50 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "12345-1",
+          "bankId": "756",
+          "bankName": "BANCO SICOOB S.A.",
+          "branchId": "3030",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "500000",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "availableBalance": {
+          "amount": {
+            "cents": "480000",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": []
+      }
+    ],
+    "warningCodes": []
+  }
+}

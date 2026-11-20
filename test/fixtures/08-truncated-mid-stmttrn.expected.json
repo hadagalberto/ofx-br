@@ -1,0 +1,84 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "900000000001",
+          "bankId": "260",
+          "bankName": "NU PAGAMENTOS - IP",
+          "branchId": "0001",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "NU-1",
+            "fitid": "NU-1",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "100000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PIX RECEBIDO - OTAVIO AUGUSTO RAMOS",
+            "memo": "PIX RECEBIDO - OTAVIO AUGUSTO RAMOS",
+            "category": "pix",
+            "counterparty": {
+              "name": "OTAVIO AUGUSTO RAMOS"
+            }
+          },
+          {
+            "id": "NU-2",
+            "fitid": "NU-2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-4210",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-20",
+            "description": "COMPRA CARTAO PADARIA BOM SABOR",
+            "memo": "COMPRA CARTAO PADARIA BOM SABOR",
+            "category": "card-purchase",
+            "counterparty": {
+              "name": "PADARIA BOM SABOR"
+            }
+          },
+          {
+            "id": "hash-e549213b84bf1cc6",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-4210",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-31",
+            "description": ""
+          }
+        ]
+      }
+    ],
+    "warningCodes": [
+      "unclosed-aggregate",
+      "unclosed-aggregate",
+      "unclosed-aggregate",
+      "unclosed-aggregate",
+      "unclosed-aggregate",
+      "unclosed-aggregate"
+    ]
+  }
+}

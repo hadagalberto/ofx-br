@@ -6,7 +6,11 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export default defineConfig(
-  { ignores: ['dist/', 'coverage/', 'node_modules/'] },
+  {
+    // `tmp/` is scratch (gitignored); the fixture generator is a standalone
+    // Node script, not part of the TypeScript project service.
+    ignores: ['dist/', 'coverage/', 'node_modules/', 'tmp/', 'test/fixtures/generate.mjs'],
+  },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,

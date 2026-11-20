@@ -1,0 +1,86 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "888999000111222",
+          "bankId": "208",
+          "bankName": "BANCO BTG PACTUAL S.A."
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "7750",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "NB-1",
+            "fitid": "NB-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1200",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T09:00:00-03:00",
+            "description": "PAGAMENTO CONTA",
+            "name": "PAGAMENTO CONTA"
+          },
+          {
+            "id": "NB-2",
+            "fitid": "NB-2",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "10000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-06T10:00:00-03:00",
+            "description": "PIX PIX RECEBIDO - FERNANDA CAMARGO",
+            "name": "PIX",
+            "memo": "PIX RECEBIDO - FERNANDA CAMARGO",
+            "category": "pix",
+            "counterparty": {
+              "name": "FERNANDA CAMARGO"
+            }
+          },
+          {
+            "id": "NB-3",
+            "fitid": "NB-3",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "1050",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-07T11:00:00-03:00",
+            "description": "COMPRA COMPRA CARTAO LOJA CENTRAL",
+            "name": "COMPRA",
+            "memo": "COMPRA CARTAO LOJA CENTRAL",
+            "category": "card-purchase",
+            "counterparty": {
+              "name": "LOJA CENTRAL"
+            }
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["nul-byte"]
+  }
+}

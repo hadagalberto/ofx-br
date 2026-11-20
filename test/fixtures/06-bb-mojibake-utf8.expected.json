@@ -1,0 +1,122 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "DATA": "OFXSGML",
+      "VERSION": "102",
+      "SECURITY": "NONE",
+      "ENCODING": "USASCII",
+      "CHARSET": "1252",
+      "COMPRESSION": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "1",
+    "encoding": "utf-8",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00",
+      "org": "BANCO DO BRASIL",
+      "fid": "001"
+    },
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "12345678901234567890",
+          "bankId": "001",
+          "bankName": "BCO DO BRASIL S.A.",
+          "branchId": "1234-5",
+          "accountType": "CHECKING"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-15"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "168310",
+            "currency": "BRL"
+          },
+          "date": "2024-01-15"
+        },
+        "transactions": [
+          {
+            "id": "BB-PX-01",
+            "fitid": "BB-PX-01",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "180000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-03T08:12:00-03:00",
+            "description": "PIX PIX RECEBIDO - LUCIANA PRADO MORAIS",
+            "name": "PIX",
+            "memo": "PIX RECEBIDO - LUCIANA PRADO MORAIS",
+            "category": "pix",
+            "counterparty": {
+              "name": "LUCIANA PRADO MORAIS"
+            }
+          },
+          {
+            "id": "BB-PX-02",
+            "fitid": "BB-PX-02",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-4200",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05T09:15:00-03:00",
+            "description": "PIX PIX ENVIADO - RAIMUNDO NONATO CUNHA CPF 111.444.777-35",
+            "name": "PIX",
+            "memo": "PIX ENVIADO - RAIMUNDO NONATO CUNHA CPF 111.444.777-35",
+            "category": "pix",
+            "counterparty": {
+              "name": "RAIMUNDO NONATO CUNHA",
+              "document": "111.444.777-35"
+            }
+          },
+          {
+            "id": "BB-BOL-01",
+            "fitid": "BB-BOL-01",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-5990",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T09:00:00-03:00",
+            "description": "PAGAMENTO BOLETO PAGO COMPANHIA ELÉTRICA SUL LTDA",
+            "name": "PAGAMENTO",
+            "memo": "BOLETO PAGO COMPANHIA ELÉTRICA SUL LTDA",
+            "category": "boleto",
+            "counterparty": {
+              "name": "COMPANHIA ELÉTRICA SUL LTDA"
+            }
+          },
+          {
+            "id": "BB-TAR-01",
+            "fitid": "BB-TAR-01",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1500",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-14T14:00:00-03:00",
+            "description": "TARIFA TARIFA PACOTE DE SERVIÇOS",
+            "name": "TARIFA",
+            "memo": "TARIFA PACOTE DE SERVIÇOS",
+            "category": "tarifa"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["mojibake-repaired"]
+  }
+}

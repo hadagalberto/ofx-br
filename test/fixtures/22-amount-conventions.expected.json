@@ -1,0 +1,150 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "us-ascii",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "00011122233344",
+          "bankId": "104",
+          "bankName": "CAIXA ECONOMICA FEDERAL"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "A1",
+            "fitid": "A1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-123456",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A2",
+            "fitid": "A2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-123456",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A3",
+            "fitid": "A3",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "123456",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A4",
+            "fitid": "A4",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "123456",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A5",
+            "fitid": "A5",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A6",
+            "fitid": "A6",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "1000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A7",
+            "fitid": "A7",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "250000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A8",
+            "fitid": "A8",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "3500000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A9",
+            "fitid": "A9",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "50",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          },
+          {
+            "id": "A10",
+            "fitid": "A10",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "123",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": ""
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["invalid-amount", "invalid-amount"]
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "200",
+      "VERSION": "200",
+      "SECURITY": "NONE",
+      "OLDFILEUID": "NONE",
+      "NEWFILEUID": "NONE"
+    },
+    "version": "2",
+    "encoding": "utf-8",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-02-01T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "creditcard",
+        "currency": "BRL",
+        "account": {
+          "accountId": "5189********1234"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "-12345",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "2024-01-10T09:37:00.000Z",
+            "fitid": "2024-01-10T09:37:00.000Z",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-13790",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T09:37:00-03:00",
+            "description": "PADARIA PÃO DOCE LTDA Compra cartão",
+            "name": "PADARIA PÃO DOCE LTDA",
+            "memo": "Compra cartão",
+            "category": "card-purchase",
+            "counterparty": {
+              "name": "PADARIA PÃO DOCE LTDA"
+            }
+          },
+          {
+            "id": "2024-01-15T20:30:00.000Z",
+            "fitid": "2024-01-15T20:30:00.000Z",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-32000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-15T20:30:00-03:00",
+            "description": "LOJA MAIÔ MODA PRAIA LTDA Compra parcelada PARC 02/10",
+            "name": "LOJA MAIÔ MODA PRAIA LTDA",
+            "memo": "Compra parcelada PARC 02/10",
+            "category": "card-purchase",
+            "counterparty": {
+              "name": "LOJA MAIÔ MODA PRAIA LTDA"
+            },
+            "installment": {
+              "current": 2,
+              "total": 10
+            }
+          },
+          {
+            "id": "2024-01-18T20:15:00.000Z",
+            "fitid": "2024-01-18T20:15:00.000Z",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "5000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-18T20:15:00-03:00",
+            "description": "ESTORNO PADARIA PÃO DOCE LTDA Estorno compra cartão",
+            "name": "ESTORNO PADARIA PÃO DOCE LTDA",
+            "memo": "Estorno compra cartão",
+            "category": "estorno",
+            "counterparty": {
+              "name": "PADARIA PÃO DOCE LTDA"
+            }
+          },
+          {
+            "id": "2024-01-25T12:00:00.000Z",
+            "fitid": "2024-01-25T12:00:00.000Z",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "150000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-25T12:00:00-03:00",
+            "description": "PAGAMENTO FATURA PAGAMENTO DE FATURA CARTAO",
+            "name": "PAGAMENTO FATURA",
+            "memo": "PAGAMENTO DE FATURA CARTAO"
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

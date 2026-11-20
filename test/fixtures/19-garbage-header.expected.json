@@ -1,0 +1,51 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "ABC",
+      "COMMENT": "GERADO POR SISTEMA LEGADO"
+    },
+    "version": "unknown",
+    "encoding": "utf-8",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "555444333222111",
+          "bankId": "336",
+          "bankName": "BCO C6 S.A."
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "99750",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "GH-1",
+            "fitid": "GH-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-250",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "TARIFA TARIFA TRANSFERENCIA",
+            "name": "TARIFA",
+            "memo": "TARIFA TRANSFERENCIA",
+            "category": "tarifa"
+          }
+        ]
+      }
+    ],
+    "warningCodes": []
+  }
+}

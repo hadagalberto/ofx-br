@@ -1,0 +1,158 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "utf-8",
+    "signOn": {
+      "statusCode": 0,
+      "severity": "INFO",
+      "serverDate": "2024-01-15T12:00:00-03:00"
+    },
+    "statements": [
+      {
+        "kind": "creditcard",
+        "currency": "BRL",
+        "account": {
+          "accountId": "5555********6666"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "ledgerBalance": {
+          "amount": {
+            "cents": "-91710",
+            "currency": "BRL"
+          },
+          "date": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "CS-1",
+            "fitid": "CS-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-13790",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10T09:37:00-03:00",
+            "description": "PADARIA PÃO DOCE LTDA Compra cartão",
+            "name": "PADARIA PÃO DOCE LTDA",
+            "memo": "Compra cartão",
+            "category": "card-purchase",
+            "counterparty": {
+              "name": "PADARIA PÃO DOCE LTDA"
+            }
+          },
+          {
+            "id": "CS-2",
+            "fitid": "CS-2",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-32000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-15T20:30:00-03:00",
+            "description": "LOJA MAIÔ MODA PRAIA PARC 02/10",
+            "name": "LOJA MAIÔ MODA PRAIA",
+            "memo": "PARC 02/10",
+            "counterparty": {
+              "name": "LOJA MAIÔ MODA PRAIA"
+            },
+            "installment": {
+              "current": 2,
+              "total": 10
+            }
+          },
+          {
+            "id": "CS-3",
+            "fitid": "CS-3",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-20000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-18T08:15:00-03:00",
+            "description": "COMPRA PARCELADA PARC 03/06",
+            "memo": "COMPRA PARCELADA PARC 03/06",
+            "category": "card-purchase",
+            "installment": {
+              "current": 3,
+              "total": 6
+            }
+          },
+          {
+            "id": "CS-4",
+            "fitid": "CS-4",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "5000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-20T12:00:00-03:00",
+            "description": "ESTORNO ESTORNO COMPRA CARTAO",
+            "name": "ESTORNO",
+            "memo": "ESTORNO COMPRA CARTAO",
+            "category": "estorno"
+          },
+          {
+            "id": "CS-5",
+            "fitid": "CS-5",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "150000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-25T12:00:00-03:00",
+            "description": "PAGAMENTO PAGAMENTO DE FATURA",
+            "name": "PAGAMENTO",
+            "memo": "PAGAMENTO DE FATURA"
+          },
+          {
+            "id": "CS-6",
+            "fitid": "CS-6",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-9000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-28T19:45:00-03:00",
+            "description": "COMPRA ONLINE PARC12/48",
+            "memo": "COMPRA ONLINE PARC12/48",
+            "category": "card-purchase",
+            "installment": {
+              "current": 12,
+              "total": 48
+            }
+          },
+          {
+            "id": "CS-7",
+            "fitid": "CS-7",
+            "type": "DEBIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "2500",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-29T11:00:00-03:00",
+            "description": "ESTORNO COMPRA CARTAO",
+            "memo": "ESTORNO COMPRA CARTAO",
+            "category": "estorno"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["mojibake-repaired"]
+  }
+}

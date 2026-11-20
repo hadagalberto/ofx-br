@@ -1,0 +1,59 @@
+{
+  "options": {},
+  "document": {
+    "header": {
+      "OFXHEADER": "100",
+      "VERSION": "102",
+      "ENCODING": "USASCII"
+    },
+    "version": "1",
+    "encoding": "utf-8",
+    "statements": [
+      {
+        "kind": "bank",
+        "currency": "BRL",
+        "account": {
+          "accountId": "1213141516",
+          "bankId": "380",
+          "bankName": "PICPAY"
+        },
+        "period": {
+          "start": "2024-01-01",
+          "end": "2024-01-31"
+        },
+        "transactions": [
+          {
+            "id": "WS-1",
+            "fitid": "WS-1",
+            "type": "DEBIT",
+            "direction": "debit",
+            "amount": {
+              "cents": "-1050",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-05",
+            "description": "PAGAMENTO BOLETO NUMERO 12345 ESTORNO TARIFA BANCARIA",
+            "name": "PAGAMENTO BOLETO NUMERO 12345",
+            "memo": "ESTORNO TARIFA BANCARIA",
+            "category": "estorno"
+          },
+          {
+            "id": "WS-2",
+            "fitid": "WS-2",
+            "type": "CREDIT",
+            "direction": "credit",
+            "amount": {
+              "cents": "200000",
+              "currency": "BRL"
+            },
+            "postedAt": "2024-01-10",
+            "description": "DEPOSITO DEPOSITO EM DINHEIRO",
+            "name": "DEPOSITO",
+            "memo": "DEPOSITO EM DINHEIRO"
+          }
+        ]
+      }
+    ],
+    "warningCodes": ["mojibake-repaired"]
+  }
+}

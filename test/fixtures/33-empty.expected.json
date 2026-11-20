@@ -1,0 +1,10 @@
+{
+  "options": {},
+  "document": {
+    "header": {},
+    "version": "unknown",
+    "encoding": "utf-8",
+    "statements": [],
+    "warningCodes": ["missing-header"]
+  }
+}
